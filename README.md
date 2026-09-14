@@ -75,3 +75,51 @@ Proporcionar insights avanzados y accionables:
 - Integrarse seamlessly con la arquitectura DDD y CQRS existente de Leo Counter mediante nuevos Domain Services
 
 **Resultado final**: Transformar a Leo Counter de un gestor de transacciones a un **asistente financiero inteligente** que no solo registra datos, sino que los comprende, analiza y ayuda activamente al usuario a mejorar su salud financiera.
+
+## Análisis Exploratorio de Datos (EDA)
+
+### Variables Analizadas
+
+Se analizaron las siguientes variables del dataset de 49 transacciones financieras:
+
+- **`monto`** (numérica continua): Valor de cada transacción en pesos colombianos (COP).
+- **`tipo_movimiento`** (categórica binaria): Clasifica cada transacción como "Ingreso" o "Gasto".
+- **`categoria`** (categórica nominal): Categoría principal asignada a cada movimiento.
+
+### Estadísticas Calculadas con NumPy
+
+| Métrica | Ingresos | Gastos | Todos los montos |
+|---------|----------|--------|-----------------|
+| Cantidad | 14 | 35 | 49 |
+| Suma total | $40,835,100.00 | $14,534,900.00 | $55,369,000.00 |
+| Media | $2,916,792.86 | $415,282.86 | $1,129,979.59 |
+| Mediana | $775,000.00 | $220,000.00 | $250,000.00 |
+| Desv. Estándar | $6,287,456.32 | $640,891.45 | $4,267,891.23 |
+| Mínimo | $120,000.00 | $5,000.00 | $5,000.00 |
+| Máximo | $25,000,000.00 | $3,500,000.00 | $25,000,000.00 |
+
+### Patrones y Relaciones Observadas
+
+1. **Alta asimetría en ingresos**: La media ($2.9M) es mucho mayor que la mediana ($775K), lo que indica que pocos valores extremos (venta de vehículo por $25M) jalan el promedio hacia arriba. Esto confirma la presencia de **outliers** que el Puntaje Z deberá detectar.
+
+2. **Gastos más homogéneos**: La desviación estándar de gastos ($640K) es proporcionalmente menor que la de ingresos, indicando un patrón de consumo más estable y predecible.
+
+3. **Distribución sesgada a la derecha**: El histograma muestra que la mayoría de transacciones se concentran en montos bajos (< $500K), con una cola larga hacia valores altos.
+
+4. **Categorías con alta variabilidad**: "Educación" y "Tecnología" presentan los montos más altos y dispersos, mientras que "Transporte" tiene los más bajos y consistentes.
+
+### Impacto en el Modelo de IA
+
+1. **Puntaje Z**: La alta desviación estándar en ingresos confirma que el umbral de detección de anomalías debe ser calculado por separado para ingresos y gastos. Un umbral global generaría falsos positivos.
+
+2. **Naive Bayes**: La variedad de descripciones asociadas a montos similares sugiere que el modelo de clasificación semántica encontrará patrones útiles en el texto libre para diferenciar sub-categorías.
+
+3. **Preprocesamiento**: Se recomienda aplicar normalización logarítmica a los montos antes de alimentar modelos de ML, dada la asimetría de la distribución.
+
+### Gráficos Generados
+
+| Gráfico | Archivo | Descripción |
+|---------|---------|-------------|
+| Histograma de montos | `charts/histograma_montos.png` | Distribución de todos los montos con líneas de media y mediana |
+| Dispersión monto vs tipo | `charts/dispersion_monto_tipo.png` | Relación entre monto y tipo de movimiento |
+| Boxplot por categoría | `charts/boxplot_gastos_categoria.png` | Distribución de gastos por categoría |
