@@ -5,13 +5,11 @@ from controllers.MovementGraphicsController import MovementGraphicsController
 from helpers.output_helpers import print_separator
 from dto.MovementNumPyDTO import MovementNumPyDTO
 
-
-
 def print_stats(title: str, stats: MovementNumPyDTO ):
     print(f"\n   {title}")
     print(f"     Cantidad    : {stats.count}")
     print(f"     Suma total  : ${stats.sum:,.2f}")
-    print(f"     Media       : ${stats.average:,.2f}")
+    print(f"     Media       : ${stats.average:,.2f}")  
     print(f"     Mediana     : ${stats.median:,.2f}")
     print(f"     Desv. Std   : ${stats.std:,.2f}")
     print(f"     Mínimo      : ${stats.min:,.2f}")

@@ -1,7 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib
-matplotlib.use('Agg')  # Para guardar sin mostrar ventana
+matplotlib.use('Agg') 
 from enums.MovementFilteringKeys import MovementFilteringKeys
 
 from services.MovementNumPyStatisticsService import MovementNumPyStatisticsService
