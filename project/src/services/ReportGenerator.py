@@ -1,6 +1,7 @@
 from controllers.MovementController import MovementController
 from datetime import datetime
 
+
 class ReportGenerator:
     def __init__(self, controller: MovementController):
         self.controller = controller
@@ -85,4 +86,45 @@ Estas estadísticas son la base para:
         with open(output_path, 'w', encoding='utf-8') as file:
             file.write(markdown)
         
-        print(f" Informe generado correctamente: {output_path}")
+        return output_path
+
+    def generate_eda_summary(self, eda_findings: dict, output_path: str = 'eda_summary.md') -> str:
+        if not eda_findings:
+            raise ValueError("No hay hallazgos de EDA para generar el resumen.")
+
+        f = eda_findings
+        markdown = f"""# Resumen EDA - Leo Counter (Pandas + Seaborn)
+
+## Dimensiones
+- Filas: {f['shape'][0]}
+- Columnas: {f['shape'][1]}
+
+## Valores Nulos
+- Total nulos: {f.get('total_nulls', 0)}
+- Columnas con nulos: {f.get('columns_with_nulls', {})}
+
+## Distribución Tipo Movimiento
+{f['tipo_movimiento_dist']}
+
+## Top 5 Categorías
+{dict(list(f['categoria_dist'].items())[:5])}
+
+## Top 5 Cuentas
+{dict(list(f['cuenta_dist'].items())[:5])}
+
+## Análisis Monto
+- Skewness: {f['monto_skew']:.4f}
+- Kurtosis: {f['monto_kurtosis']:.4f}
+- Outliers IQR: {f['monto_outliers_iqr']['outlier_count']} ({f['monto_outliers_iqr']['outlier_percentage']:.1f}%)
+
+## Ingresos vs Gastos
+- Ingresos: {f['income_vs_expense']['income_count']} (Media: ${f['income_vs_expense']['income_mean']:,.0f}, Mediana: ${f['income_vs_expense']['income_median']:,.0f})
+- Gastos: {f['income_vs_expense']['expense_count']} (Media: ${f['income_vs_expense']['expense_mean']:,.0f}, Mediana: ${f['income_vs_expense']['expense_median']:,.0f})
+
+---
+*Resumen generado automáticamente el {datetime.now().strftime('%d/%m/%Y %H:%M:%S')} por Leo Counter AI - Módulo de Preparación de Datos.*
+"""
+        with open(output_path, 'w', encoding='utf-8') as file:
+            file.write(markdown)
+        
+        return output_path

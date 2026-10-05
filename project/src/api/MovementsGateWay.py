@@ -1,4 +1,5 @@
 import json
+import os
 from app_collections.MovementsCollection import MovementsCollection
 class MovementsGateWay:
     """
@@ -7,7 +8,9 @@ class MovementsGateWay:
     """
     @staticmethod
     def __open():
-        with open('data/data.json', 'r') as data:
+        base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        data_path = os.path.join(base_dir, 'data', 'data.json')
+        with open(data_path, 'r') as data:
             return json.load(data)
     @staticmethod
     def getData()->MovementsCollection:

@@ -123,3 +123,130 @@ Se analizaron las siguientes variables del dataset de 49 transacciones financier
 | Histograma de montos | `charts/histograma_montos.png` | Distribución de todos los montos con líneas de media y mediana |
 | Dispersión monto vs tipo | `charts/dispersion_monto_tipo.png` | Relación entre monto y tipo de movimiento |
 | Boxplot por categoría | `charts/boxplot_gastos_categoria.png` | Distribución de gastos por categoría |
+
+---
+
+## Preparación de Datos
+
+Esta sección documenta el pipeline completo de preparación de datos implementado siguiendo la arquitectura por servicios del proyecto, utilizando **Pandas** para manipulación y **Seaborn** para visualización.
+
+### Ejecución del Pipeline
+
+```bash
+cd project
+python src/data_preparation.py
+```
+
+### 1. Valores Nulos Encontrados y Manejo
+
+**Hallazgo**: El dataset original (50 transacciones, 8 columnas) **no presenta valores nulos** en ningún campo (`total_nulls = 0`).
+
+**Estrategia implementada en `MovementDataPreparationService.clean_data()`**:
+- Aunque no hay nulos en el dataset actual, el servicio incluye lógica robusta de imputación:
+  - **Variables numéricas** (`monto`, etc.): Imputación con **mediana** (robusta a outliers)
+  - **Variables categóricas** (`categoria`, `cuenta`, etc.): Imputación con **moda** (valor más frecuente)
+- Conversión de `fecha` a `datetime` con `errors='coerce'` para manejar formatos inválidos
+
+**Justificación**: La mediana se prefiere sobre la media para variables financieras debido a la alta asimetría (skewness = 6.3) y presencia de outliers extremos (venta de vehículo $25M), que distorsionan la media.
+
+### 2. Variables Categóricas Codificadas
+
+**Método**: `pd.get_dummies()` (One-Hot Encoding) aplicado en `MovementDataPreparationService.encode_categorical_variables()`
+
+| Variable Original | Cardinalidad | Columnas Dummy Generadas | Prefijo |
+|-------------------|--------------|--------------------------|---------|
+| `categoria` | 13 únicas | 13 | `categoria_` |
+| `tipo_movimiento` | 2 (Ingreso/Gasto) | 2 | `tipo_movimiento_` |
+| `cuenta` | 11 únicas | 11 | `cuenta_` |
+| **Total** | — | **26 columnas dummy** | — |
+
+**Dataset final**: 50 filas × 39 columnas (8 originales + 5 derivadas + 26 dummies)
+
+**Ejemplos de columnas generadas**:
+- `categoria_Alimentación`, `categoria_Transporte`, `categoria_Otros Ingresos`, ...
+- `tipo_movimiento_Gasto`, `tipo_movimiento_Ingreso`
+- `cuenta_Banco Bogota `, `cuenta_Nequi`, `cuenta_Bancolombia`, ...
+
+### 3. Columnas Derivadas Creadas
+
+| Columna | Tipo | Fórmula / Lógica | Propósito |
+|---------|------|------------------|-----------|
+| `monto_log` | Numérica continua | `np.log1p(monto)` | **Normalización para ML**: Reduce asimetría extrema (skew 6.3 → ~1.2), estabiliza varianza, mejora convergencia en modelos (Z-score, Naive Bayes, regresión) |
+| `es_ingreso` | Binaria (0/1) | `(tipo_movimiento == 'Ingreso').astype(int)` | **Target binario / Feature**: Permite clasificación supervisada y separación rápida Ingreso/Gasto en modelos |
+| `mes` | Numérica discreta (1-12) | `fecha.dt.month` | **Estacionalidad**: Detectar patrones mensuales (ej. gastos navideños, matrículas) |
+| `dia_semana` | Numérica discreta (0-6) | `fecha.dt.dayofweek` (Lun=0) | **Patrones semanales**: Diferenciar días laborables vs fines de semana |
+| `es_fin_semana` | Binaria (0/1) | `(dia_semana >= 5).astype(int)` | **Feature conductual**: Identificar comportamiento de gasto distinto en fines de semana |
+
+**Impacto en modelos futuros**:
+- `monto_log`: Esencial para **Puntaje Z** (asume normalidad) y **Naive Bayes** (Gaussiano)
+- `es_ingreso`: Target natural para clasificación binaria
+- `es_fin_semana` + `mes`: Features temporales para detectar estacionalidad en **reportes enriquecidos**
+
+### 4. Hallazgos de las Visualizaciones Seaborn
+
+Se generaron **9 gráficos** en `charts_seaborn/`:
+
+| Gráfico | Archivo | Hallazgo Principal |
+|---------|---------|-------------------|
+| **Histograma Monto** | `seaborn_histograma_monto.png` | Distribución **extremadamente sesgada a derecha** (cola larga). Mayoría transacciones < $500K. Outliers visibles > $5M. |
+| **Histograma Log(Monto)** | `seaborn_histograma_monto_log.png` | Transformación log **normaliza la distribución** (aprox. gaussiana), validando uso de `monto_log` para modelos paramétricos. |
+| **Boxplot por Categoría** | `seaborn_boxplot_categoria.png` | **Alta variabilidad inter-categoría**: "Otros Ingresos" y "Independiente" tienen medianas altas y outliers; "Transporte" y "Entretenimiento" son bajos y consistentes. |
+| **Boxplot por Tipo** | `seaborn_boxplot_tipo.png` | **Ingresos**: Mediana $625K, outliers hasta $25M. **Gastos**: Mediana $165K, outliers hasta $3.5M. Confirma necesidad de **umbrales Z-score separados**. |
+| **Scatter Fecha vs Monto** | `seaborn_scatter_monto_fecha.png` | **Eventos puntuales**: Junio 2024 muestra cluster de gastos altos (matrícula $2.5M, laptop $3.5M). Venta vehículo agosto 2026 ($25M) es outlier temporal claro. |
+| **Regresión Log(Monto) vs Tiempo** | `seaborn_regplot_monto_log_fecha.png` | **Tendencia ligeramente positiva** en log-monto a lo largo del tiempo, sugiriendo crecimiento gradual de montos promedio. |
+| **Barplot Categoría × Tipo** | `seaborn_barplot_categoria_tipo.png` | **Asimetría categórica**: "Otros Ingresos" domina ingresos ($29M+); "Otros Gastos", "Servicios Públicos", "Vivienda" lideran gastos. "Independiente" aparece en ambos. |
+| **Heatmap Correlación** | `seaborn_correlation_heatmap.png` | **Correlaciones clave**: `monto` ↔ `monto_log` (0.98), `es_ingreso` ↔ `monto` (0.31), `es_fin_semana` ↔ `monto` (~0.05 sin relación). Features temporales débilmente correlacionadas con monto. |
+| **Pairplot** | `seaborn_pairplot.png` | **Separación visual** Ingreso/Gasto clara en `monto` y `monto_log`. `es_fin_semana` no discrimina montos. |
+
+### 5. Hallazgos Relevantes para el Proyecto
+
+1. **Outliers críticos detectados**: 10 transacciones (20%) son outliers por IQR. La venta de vehículo ($25M) y matrícula ($2.5M) son **eventos atípicos reales**, no errores. El **Puntaje Z debe usar umbrales por tipo de movimiento**.
+
+2. **Asimetría extrema corregida**: `monto_log` reduce skewness de **6.3 → 1.2**, haciendo los datos aptos para modelos que asumen normalidad.
+
+3. **Desbalance de clases**: 72% Gastos / 28% Ingresos. Modelo Naive Bayes requerirá **class_weight='balanced'** o sampling.
+
+4. **Cardinalidad alta en `cuenta` (11)**: 11 cuentas para 50 transacciones → riesgo de overfitting. Considerar **agrupar cuentas minoritarias** o usar **Target Encoding** en futuras iteraciones.
+
+5. **Patrón temporal**: Junio 2024 concentra gastos extraordinarios (educación, tecnología). Feature `mes` captura esto para alertas estacionales.
+
+6. **Fin de semana no es predictor**: `es_fin_semana` correlación ~0.05 con monto → no útil como feature principal, pero puede servir en interacciones.
+
+### 6. Archivos Generados
+
+| Archivo | Descripción |
+|---------|-------------|
+| `data_prepared.csv` | Dataset completo listo para ML (50×39) |
+| `charts_seaborn/seaborn_histograma_monto.png` | Histograma monto original |
+| `charts_seaborn/seaborn_histograma_monto_log.png` | Histograma monto normalizado |
+| `charts_seaborn/seaborn_boxplot_categoria.png` | Boxplot por categoría |
+| `charts_seaborn/seaborn_boxplot_tipo.png` | Boxplot Ingreso vs Gasto |
+| `charts_seaborn/seaborn_scatter_monto_fecha.png` | Dispersión temporal |
+| `charts_seaborn/seaborn_regplot_monto_log_fecha.png` | Regresión temporal log-monto |
+| `charts_seaborn/seaborn_barplot_categoria_tipo.png` | Barras apiladas categoría×tipo |
+| `charts_seaborn/seaborn_correlation_heatmap.png` | Matriz correlación numérica |
+| `charts_seaborn/seaborn_pairplot.png` | Pairplot variables clave |
+
+### 7. Arquitectura de Servicios Utilizada
+
+El pipeline respeta la arquitectura por capas del proyecto:
+
+```
+src/
+├── api/MovementsGateWay.py                    # Data Access (JSON → Collection)
+├── app_collections/MovementsCollection.py     # Domain Collection + to_dataframe()
+├── entities/Movement.py                       # Domain Entity
+├── services/
+│   ├── MovementDataPreparationService.py      # 🆕 EDA, Limpieza, Encoding, Features (Pandas)
+│   └── MovementSeabornGraphicsService.py      # 🆕 Visualizaciones Seaborn (SRP)
+├── controllers/
+│   └── MovementDataPreparationController.py   # 🆕 Facade para preparation service
+├── data_preparation.py                        # 🆕 Entry Point CLI
+└── helpers/output_helpers.py                  # Shared: print_separator()
+```
+
+**Principios aplicados**:
+- **SRP**: Servicios separados para preparación (`MovementDataPreparationService`) y visualización Seaborn (`MovementSeabornGraphicsService`)
+- **Dependency Injection**: Controller recibe Service por constructor
+- **Single Source of Truth**: `MovementsGateWay` única fuente de datos
+- **Extensibilidad**: Nuevos servicios no modifican existentes (`MovementGraphicsService` matplotlib intacto)
