@@ -1,8 +1,8 @@
 from controllers.MovementController import MovementController
-from services.MovementStatisticsService import MovementStatisticsService
-from services.ReportGenerator import ReportGenerator
+from services.StatisticsService import StatisticsService
+from outputs.reporting.FinancialReportGenerator import FinancialReportGenerator
 
-service = MovementStatisticsService()
+service = StatisticsService()
 controller = MovementController(service)
 
 print('Total de ingresos: ', controller.getTotalIncomes())
@@ -15,5 +15,5 @@ print("Maximo gasto: ", controller.getMaxExpense())
 print("Minimo gasto: ", controller.getMinExpense())
 
 
-report = ReportGenerator(controller)
+report = FinancialReportGenerator(controller)
 report.generate()

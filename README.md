@@ -14,6 +14,74 @@ Al no tener un soporte inteligente, las analiticas y reportes pueden no ser tan 
 
 ---
 
+## Estructura del Proyecto
+
+```
+project/src/
+├── main.py                          # Entry point: estadísticas financieras básicas
+├── eda_proyectos.py                 # Entry point: EDA con NumPy + gráficos Matplotlib
+├── data_preparation.py              # Entry point: pipeline completo de preparación de datos
+│
+├── api/                             # Acceso a datos
+│   └── MovementsGateWay.py          # Lee data.json (futuro: API real)
+│
+├── entities/                        # Entidades de dominio
+│   └── Movement.py                  # Movimiento financiero
+│
+├── app_collections/                 # Colecciones de dominio
+│   └── MovementsCollection.py       # Colección tipada con filtrado por Enum
+│
+├── enums/                           # Value Objects
+│   └── MovementFilteringKeys.py     # Claves de filtrado (cuenta, categoria, tipo, fecha)
+│
+├── dto/                             # Data Transfer Objects de estadísticas
+│   └── MovementNumPyDTO.py          # Stats NumPy (median, mean, std, min, max...)
+│
+├── services/                        # Lógica de negocio pura (cálculos)
+│   ├── StatisticsService.py         # Estadísticas con Python puro
+│   └── NumpyStatisticsService.py    # Estadísticas con NumPy (EDA)
+│
+├── pipelines/                       # Pipelines de procesamiento de datos
+│   └── transform/
+│       ├── DataPreparationPipeline.py   # Orquestador: ejecuta steps en orden
+│       ├── DataPreparationRunner.py     # Composition root: ensambla el pipeline
+│       ├── DataPreparationContext.py    # Estado compartido inmutable entre steps
+│       ├── steps/                       # Cada paso del pipeline (SRP)
+│       │   ├── DataPreparationStep.py       # ABC: contrato de los steps
+│       │   ├── LoadDataStep.py              # Carga datos vía Gateway
+│       │   ├── EdaStep.py                   # Genera EdaReport (DTO tipado)
+│       │   ├── CleanDataStep.py             # Limpieza + CleaningReport (DTO)
+│       │   ├── FeatureEngineeringStep.py    # Columnas derivadas (monto_log, es_fin_semana...)
+│       │   ├── EncodingStep.py              # pd.get_dummies() en categóricas
+│       │   └── PersistStep.py               # Guarda CSV preparado
+│       └── dtos/                        # DTOs tipados del pipeline
+│           ├── EdaReport.py               # Hallazgos EDA (shape, nulos, outliers...)
+│           └── CleaningReport.py          # Registro de imputaciones realizadas
+│
+├── outputs/                         # Generadores de artefactos (NO lógica de negocio)
+│   ├── visualization/
+│   │   ├── MatplotlibChartRenderer.py   # Gráficos Matplotlib → charts/
+│   │   └── SeabornChartRenderer.py      # Gráficos Seaborn → charts_seaborn/
+│   └── reporting/
+│       ├── FinancialReportGenerator.py  # Informe financiero Markdown
+│       └── EdaReportGenerator.py        # Resumen EDA Markdown desde DTOs
+│
+├── controllers/                     # Fachadas (adaptadores hacia entry points)
+│   ├── MovementController.py        # Expone estadísticas básicas
+│   └── MovementGraphicsController.py # Expone generación de gráficos
+│
+└── helpers/                         # Utilidades compartidas
+    └── output_helpers.py            # print_separator() para CLI
+```
+
+**Principios de la arquitectura:**
+- **services/**: solo lógica de negocio (cálculos estadísticos). Sin prints ni generación de artefactos.
+- **outputs/**: generadores de artefactos (imágenes, reportes). Reciben datos ya procesados.
+- **pipelines/**: flujos de transformación de datos descompuestos en steps atómicos y extensibles, con estado compartido **inmutable** (`DataPreparationContext`, `dataclasses.replace`) y resultados en **DTOs tipados** (nunca dicts inseguros).
+- **controllers/**: fachadas simples que desacoplan los entry points de los services.
+
+---
+
 ## Datos
 
 ### Información requerida

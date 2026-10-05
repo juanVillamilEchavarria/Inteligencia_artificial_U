@@ -6,7 +6,7 @@ from entities.Movement import Movement
 from dto.MovementNumPyDTO import MovementNumPyDTO
 
 
-class MovementNumPyStatisticsService:
+class NumpyStatisticsService:
     """
     Servicio de estadísticas usando NumPy.
     para el análisis exploratorio de datos (EDA).

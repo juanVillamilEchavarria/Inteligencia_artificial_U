@@ -4,16 +4,16 @@ import matplotlib
 matplotlib.use('Agg') 
 from enums.MovementFilteringKeys import MovementFilteringKeys
 
-from services.MovementNumPyStatisticsService import MovementNumPyStatisticsService
+from services.NumpyStatisticsService import NumpyStatisticsService
 
 
-class MovementGraphicsService:
+class MatplotlibChartRenderer:
     """
     Service encargado de generar los gráficos del EDA.
     Guarda los archivos PNG en la carpeta /charts/
     """
 
-    def __init__(self, numpyService: MovementNumPyStatisticsService):
+    def __init__(self, numpyService: NumpyStatisticsService):
         self.service = numpyService
         self.charts_dir = 'charts/'
 

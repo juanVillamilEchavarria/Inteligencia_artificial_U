@@ -1,3 +1,25 @@
+has violado horriblemente SOLID en el MovementDataPreparationService, esa clase quedo un mounstro que nisiquiera se lee facilmente, es una violacion tremenda a SOLID y clean code, debes de refactorizarlo y colocarlo todo correctamente, primero, el service (MovementDataPreparationService) VIOLA SRP horriblemente, hace muchas cosas, limpiar datos, eda, columnas nuevas, etc, es imposible de extender limpiamente, conforme el proyecto crezca, la deuda tecnica terminara ahogandolo, ahora bien, este es un pipeline de preparacion de datos, cada paso, debe tener una clase dedicada para ello, ademas, guardas estadisticas (findings) en arrays de manera insegura, para eso, se deben crear DTOs, debes de refactorizar todo esto, pues esto es un pipeline, esta es la estructura de carpetas que debes de seguir: 
+DataPreparationPipeline.py     # Orquestador
+DataPreparationRunner.py     # Orquestador
+│       ├── DataPreparationContext.py              # Estado compartido explícito
+│       ├── steps/
+│       │   ├── DataPreparationStep.py             # ABC
+│       │   ├── LoadDataStep.py
+│       │   ├── EdaStep.py
+│       │   ├── CleanDataStep.py
+│       │   ├── FeatureEngineeringStep.py
+│       │   ├── EncodingStep.py
+│       │   └── PersistStep.py
+│       └── dtos/
+│           ├── EdaReport.py
+│           └── CleaningReport.py
+
+
+todo esto dentro de la carpeta src/pipelines/transform
+
+
+es decir, para cada funcion de esto:
+
 import pandas as pd
 import numpy as np
 from api.MovementsGateWay import MovementsGateWay
@@ -162,3 +184,117 @@ class MovementDataPreparationService:
             self.df_prepared.to_csv(output_path, index=False)
         else:
             raise ValueError("No hay datos preparados para guardar. Ejecute prepare_full_pipeline() primero.")
+
+
+debe representarse en un step del pipeline.
+
+el runner tendria esto:
+class DataPreparationRunner:
+    """Ensambla y ejecuta el pipeline de preparación de datos.
+
+    Esta clase es el composition root del pipeline: conoce las dependencias
+    concretas (gateway, pasos, orden) y expone una interfaz simple al exterior.
+    """
+
+    def __init__(self, output_path: str = "data_prepared.csv"):
+        gateway = MovementsGateWay()
+        self._pipeline = DataPreparationPipeline(steps=[
+            LoadDataStep(gateway),
+            EdaStep(),
+            CleanDataStep(),
+            FeatureEngineeringStep(),
+            EncodingStep(),
+            PersistStep(output_path),
+        ])
+
+    def run(self) -> PipelineContext:
+        return self._pipeline.run()
+
+
+el pipe line haria esto:
+class DataPreparationPipeline:
+    def __init__(self, steps: List[PipelineStep]):
+        self._steps = steps
+
+    def run(self) -> PipelineContext:
+        context = PipelineContext()
+        for step in self._steps:
+            print(f"  → {step.name}")
+            context = step.execute(context)
+        return context
+
+
+
+el PipeLine context seria asi:
+@dataclass
+class DataPreparationContext:
+    """Único estado compartido durante la ejecución del pipeline."""
+    df_raw: Optional[pd.DataFrame] = None
+    df_clean: Optional[pd.DataFrame] = None
+    df_prepared: Optional[pd.DataFrame] = None
+    eda_report: Optional[EdaReport] = None
+    metadata: Dict[str, Any] = field(default_factory=dict)
+
+
+un ejemplo de lo que haria cada step (ejemplo con EdaStep):
+class EdaStep(PipelineStep):
+    @property
+    def name(self) -> str:
+        return "EDA"
+
+    def execute(self, context: PipelineContext) -> PipelineContext:
+        df = context.df_raw
+        if df is None:
+            raise ValueError("EdaStep requiere df_raw cargado (¿falta LoadDataStep?)")
+
+        report = EdaReport(
+            shape=df.shape,
+            null_counts=df.isnull().sum().to_dict(),
+            total_nulls=int(df.isnull().sum().sum()),
+            dtypes=df.dtypes.astype(str).to_dict(),
+            unique_categories=df["categoria"].nunique(),
+            unique_accounts=df["cuenta"].nunique(),
+            monto_skew=float(df["monto"].skew()),
+            monto_kurtosis=float(df["monto"].kurtosis()),
+            outlier_analysis=self._detect_outliers_iqr(df["monto"]),
+            income_vs_expense=self._split_by_tipo(df),
+        )
+        context.eda_report = report
+        return context
+
+    def _detect_outliers_iqr(self, series) -> dict:
+        q1, q3 = series.quantile(0.25), series.quantile(0.75)
+        iqr = q3 - q1
+        lower, upper = q1 - 1.5 * iqr, q3 + 1.5 * iqr
+        outliers = series[(series < lower) | (series > upper)]
+        return {
+            "q1": float(q1), "q3": float(q3), "iqr": float(iqr),
+            "lower_bound": float(lower), "upper_bound": float(upper),
+            "count": int(len(outliers)),
+            "percentage": float(len(outliers) / len(series) * 100),
+        }
+
+    def _split_by_tipo(self, df) -> dict:
+        ing = df[df["tipo_movimiento"] == "Ingreso"]["monto"]
+        gas = df[df["tipo_movimiento"] == "Gasto"]["monto"]
+        return {
+            "income_count": len(ing), "expense_count": len(gas),
+            "income_mean": float(ing.mean()), "expense_mean": float(gas.mean()),
+            "income_median": float(ing.median()), "expense_median": float(gas.median()),
+            "income_max": float(ing.max()), "expense_max": float(gas.max()),
+        }
+
+
+
+
+Entonces elimina el MovementDataPreparationController, y simplemente llama al DataPreparationRunner en el data_preparation.py 
+
+
+ademas quiero refactorizar algo, actualmente los services que son de generacion de algo (imagenes, .md, etc) no son SERVICES, LOS SERVICES SON PARA LOGICA DE NEGOCIO, asi que muevelos a una carpeta llamda outputs/ , para los generadores de graficos, estaran dentro de outputs/visualization, y el ReportGenerator estara en outputs/reporting, el resto de servicios que generan estadisticas, simplemente mantenlos en services/ porque realmente SON SERVICES
+
+
+tambien debes renombrar los archivos :
+MovementGraphicsService-> MatploitChartRenderer
+MovementNumpyStatisticsService-> NumpyStatisticsService.
+MovementSeabornGraphicsService-> SeabornChartRenderer.
+MovementStatisticsService-> StatisticsService

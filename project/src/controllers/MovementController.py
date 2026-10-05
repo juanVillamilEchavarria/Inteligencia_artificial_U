@@ -1,7 +1,7 @@
-from services.MovementStatisticsService import MovementStatisticsService
+from services.StatisticsService import StatisticsService
 
 class MovementController:
-    def __init__(self, movementService: MovementStatisticsService):
+    def __init__(self, movementService: StatisticsService):
         self.service = movementService
 
     def getTotalIncomes(self):

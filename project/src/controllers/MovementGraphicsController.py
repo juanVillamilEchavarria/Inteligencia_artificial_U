@@ -1,8 +1,8 @@
-from services.MovementGraphicsService import MovementGraphicsService
+from outputs.visualization.MatplotlibChartRenderer import MatplotlibChartRenderer
 
 class MovementGraphicsController:
-    def __init__(self, movementGraphicsService: MovementGraphicsService):
-        self.service = movementGraphicsService
+    def __init__(self, chartRenderer: MatplotlibChartRenderer):
+        self.service = chartRenderer
 
     def generateAll(self):
         self.service.generateAll()

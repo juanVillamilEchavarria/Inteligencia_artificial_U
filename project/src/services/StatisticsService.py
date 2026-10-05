@@ -3,7 +3,7 @@ from app_collections.MovementsCollection import MovementsCollection
 from enums.MovementFilteringKeys import MovementFilteringKeys
 from entities.Movement import Movement
 
-class MovementStatisticsService:
+class StatisticsService:
     def __init__(self):
         self.movements : MovementsCollection = MovementsGateWay.getData()
     def getExpenses(self)-> list[Movement]:

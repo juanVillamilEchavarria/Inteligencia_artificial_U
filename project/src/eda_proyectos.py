@@ -1,6 +1,5 @@
-import numpy as np
-from services.MovementNumPyStatisticsService import MovementNumPyStatisticsService
-from services.MovementGraphicsService import MovementGraphicsService
+from services.NumpyStatisticsService import NumpyStatisticsService
+from outputs.visualization.MatplotlibChartRenderer import MatplotlibChartRenderer
 from controllers.MovementGraphicsController import MovementGraphicsController
 from helpers.output_helpers import print_separator
 from dto.MovementNumPyDTO import MovementNumPyDTO
@@ -9,7 +8,7 @@ def print_stats(title: str, stats: MovementNumPyDTO ):
     print(f"\n   {title}")
     print(f"     Cantidad    : {stats.count}")
     print(f"     Suma total  : ${stats.sum:,.2f}")
-    print(f"     Media       : ${stats.average:,.2f}")  
+    print(f"     Media       : ${stats.average:,.2f}")
     print(f"     Mediana     : ${stats.median:,.2f}")
     print(f"     Desv. Std   : ${stats.std:,.2f}")
     print(f"     Mínimo      : ${stats.min:,.2f}")
@@ -17,9 +16,9 @@ def print_stats(title: str, stats: MovementNumPyDTO ):
 
 
 def main():
-    numpy_service = MovementNumPyStatisticsService()
-    graphics_service = MovementGraphicsService(numpy_service)
-    graphics_controller = MovementGraphicsController(graphics_service)
+    numpy_service = NumpyStatisticsService()
+    chart_renderer = MatplotlibChartRenderer(numpy_service)
+    graphics_controller = MovementGraphicsController(chart_renderer)
 
     print_separator("ANÁLISIS EXPLORATORIO DE DATOS - LEO COUNTER AI")
 
