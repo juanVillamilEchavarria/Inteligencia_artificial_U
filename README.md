@@ -318,3 +318,52 @@ src/
 - **Dependency Injection**: Controller recibe Service por constructor
 - **Single Source of Truth**: `MovementsGateWay` única fuente de datos
 - **Extensibilidad**: Nuevos servicios no modifican existentes (`MovementGraphicsService` matplotlib intacto)
+
+---
+
+## Conclusiones del Aprendizaje beta de neuronas
+
+Durante el entrenamiento de neuronas artificiales (`clase_8/src/main.py` y `clase_8/src/neuronas_logicas.py`) se implementó un **perceptrón simple** con función de activación **escalón** y la regla de aprendizaje del perceptrón (`peso += tasa_aprendizaje * error * entrada`), partiendo de parámetros iniciales `w1 = 0.5`, `w2 = 0.5`, `b = -0.7` y una **tasa de aprendizaje de 0.1**.
+
+### Resultados del entrenamiento
+
+| Compuerta | Épocas necesarias | Parámetros finales | ¿Convergió? |
+|-----------|-------------------|--------------------|-------------|
+| AND | 1 | `w1=0.5, w2=0.5, b=-0.7` (sin cambios) | Sí |
+| OR | 2 | `w1=0.6, w2=0.6, b=-0.5` | Sí |
+| NOT | 16 | `w1=-0.2, b=0.1` | Sí |
+| XOR | Nunca | — | No |
+
+### ¿Cuántas épocas necesitó cada compuerta para aprender?
+
+- **AND: 1 época.** Los parámetros iniciales ya resuelven esta compuerta desde el arranque: `z(0,0) = -0.7 → 0`, `z(0,1) = -0.2 → 0`, `z(1,0) = -0.2 → 0`, `z(1,1) = +0.3 → 1`. El error total es 0 en la primera época y no se realiza ningún ajuste.
+- **OR: 2 épocas.** En la época 1 falla en las entradas `(0,1)` y `(1,0)` (error total = 2), porque `z = -0.2` queda justo debajo del umbral. Tras subir los pesos y el bias converge con `w1 = w2 = 0.6, b = -0.5`.
+- **NOT: 16 épocas.** El error oscila en un patrón `1, 2, 1, 2, ...` hasta llegar a 0 en la época 16. La solución de NOT exige `w1 < 0` y `b ≥ 0`, pero se inicializó con `w1 = +0.5` y `b = -0.7` (ambos del signo equivocado), por lo que el algoritmo necesita muchas iteraciones para "darles la vuelta". Por eso en el código se le dio un límite de 20 épocas a NOT y solo 10 a OR.
+- **XOR: nunca converge** (ver punto 4).
+
+### ¿Fue necesario ajustar la tasa de aprendizaje? ¿Por qué?
+
+**No.** Se mantuvo en `0.1` para todas las compuertas y todas las linealmente separables convergieron:
+
+- Por el **teorema de convergencia del perceptrón**, si los datos son linealmente separables el algoritmo converge en un número finito de pasos con **cualquier** tasa de aprendizaje positiva. La tasa afecta el tamaño de cada salto de ajuste, no la capacidad de converger.
+- Con `0.1` cada corrección mueve un peso solo `±0.1`, produciendo ajustes pequeños y estables. Una tasa mayor (p. ej. `0.5`) habría reducido las épocas del NOT, pero no era necesaria para que aprendiera.
+- Lo que sí se ajustó fue el **número máximo de épocas** (20 para NOT vs 10 para OR), y fue suficiente.
+
+### ¿Qué diferencias encontró entre la compuerta AND y la OR?
+
+- **Geometría de la frontera de decisión:** ambas son linealmente separables (una línea separa los 1s de los 0s), pero al lado contrario: en AND solo `(1,1)` activa (la región de 1s es una esquina del plano); en OR activa todo excepto `(0,0)` (la región de 0s es una esquina).
+- **Punto de partida:** con `(0.5, 0.5, -0.7)` la neurona "nace" sabiendo AND, por eso converge en 1 época. Esa misma configuración falla en OR para `(0,1)` y `(1,0)` porque `z = -0.2 < 0` queda justo debajo del umbral; OR necesita una frontera más "permisiva", y de hecho su solución final tiene un bias mayor (`-0.5` vs `-0.7`).
+- **Velocidad de aprendizaje:** AND 1 época, OR 2. En la práctica ambas son problemas triviales para el perceptrón por ser linealmente separables; la diferencia dramática surge al compararlas con XOR.
+
+### ¿Por qué la compuerta XOR no puede ser aprendida por una sola neurona?
+
+Porque **XOR no es linealmente separable**. Una neurona con función escalón solo puede trazar una frontera de decisión **recta** (`escalon(w1·x1 + w2·x2 + b)`), pero en XOR las salidas 1 — `(0,1)` y `(1,0)` — están en **diagonales opuestas**, y ninguna línea puede dejarlas de un lado mientras los 0s — `(0,0)` y `(1,1)` — quedan del otro.
+
+Demostración por contradicción con las restricciones de XOR:
+
+1. `(0,0) → 0` exige `b < 0`
+2. `(0,1) → 1` exige `w2 + b ≥ 0`, es decir `w2 ≥ -b > 0`
+3. `(1,0) → 1` exige `w1 ≥ -b > 0`
+4. Entonces `w1 + w2 + b ≥ -b > 0` implica `(1,1) → 1`, pero XOR exige `(1,1) → 0`. **Contradicción: no existe solución.**
+
+Empíricamente, al entrenar con la misma regla durante 1000 épocas el error nunca llega a 0: los pesos quedan oscilando sin encontrar una frontera posible. Este es el problema que **Minsky y Papert demostraron formalmente en 1969** en su libro *Perceptrons*, lo que frenó la investigación en redes neuronales y desató el **primer invierno de la IA**. La solución requiere una **red multicapa con capa oculta** (p. ej. `XOR = OR(AND(x1,x2), AND(NOT x1, NOT x2))` con neuronas ocultas) entrenada con descenso de gradiente y **backpropagation**: precisamente la motivación histórica para pasar del perceptrón simple a las redes neuronales profundas.
