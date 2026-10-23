@@ -1,3 +1,5 @@
+"""Gráficos exploratorios del dataset preparado usando Seaborn."""
+
 import os
 import pandas as pd
 import numpy as np
@@ -6,22 +8,30 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import seaborn as sns
 
+from helpers.project_paths import SEABORN_CHARTS_DIR
+
 
 class SeabornChartRenderer:
-    def __init__(self, dfPrepared: pd.DataFrame, chartsDir: str = 'charts_seaborn/'):
+    """Genera y guarda los gráficos del análisis exploratorio."""
+
+    def __init__(self, dfPrepared: pd.DataFrame, chartsDir: str = None):
+        """Recibe el dataframe preparado y la carpeta de salida."""
         self.dfPrepared = dfPrepared
-        self.chartsDir = chartsDir
+        self.chartsDir = chartsDir or f"{SEABORN_CHARTS_DIR}/"
 
     def _ensureDir(self):
+        """Crea la carpeta de gráficos si todavía no existe."""
         os.makedirs(self.chartsDir, exist_ok=True)
 
     def _save(self, filepath: str) -> str:
+        """Ajusta la figura, la guarda y cierra el gráfico."""
         plt.tight_layout()
         plt.savefig(filepath, dpi=150, bbox_inches='tight')
         plt.close()
         return filepath
 
     def generateMontoHistogram(self, filename: str = 'seaborn_histograma_monto.png') -> str:
+        """Genera el histograma de montos con media y mediana."""
         self._ensureDir()
         df = self.dfPrepared
 
@@ -37,6 +47,7 @@ class SeabornChartRenderer:
         return self._save(f"{self.chartsDir}{filename}")
 
     def generateMontoLogHistogram(self, filename: str = 'seaborn_histograma_monto_log.png') -> str:
+        """Genera el histograma del monto transformado con logaritmo."""
         self._ensureDir()
         df = self.dfPrepared
 
@@ -52,6 +63,7 @@ class SeabornChartRenderer:
         return self._save(f"{self.chartsDir}{filename}")
 
     def generateBoxplotCategory(self, filename: str = 'seaborn_boxplot_categoria.png') -> str:
+        """Genera el boxplot de montos por categoría."""
         self._ensureDir()
         df = self.dfPrepared
 
@@ -66,6 +78,7 @@ class SeabornChartRenderer:
         return self._save(f"{self.chartsDir}{filename}")
 
     def generateBoxplotTipoMovimiento(self, filename: str = 'seaborn_boxplot_tipo.png') -> str:
+        """Genera el boxplot que compara ingresos y gastos."""
         self._ensureDir()
         df = self.dfPrepared
 
@@ -78,6 +91,7 @@ class SeabornChartRenderer:
         return self._save(f"{self.chartsDir}{filename}")
 
     def generateScatterMontoFecha(self, filename: str = 'seaborn_scatter_monto_fecha.png') -> str:
+        """Genera la dispersión de monto contra fecha, separada por tipo."""
         self._ensureDir()
         df = self.dfPrepared
 
@@ -97,6 +111,7 @@ class SeabornChartRenderer:
         return self._save(f"{self.chartsDir}{filename}")
 
     def generateRegplotMontoLogFecha(self, filename: str = 'seaborn_regplot_monto_log_fecha.png') -> str:
+        """Genera la regresión del monto logarítmico a lo largo del tiempo."""
         self._ensureDir()
         df = self.dfPrepared
 
@@ -113,6 +128,7 @@ class SeabornChartRenderer:
         return self._save(f"{self.chartsDir}{filename}")
 
     def generateBarplotCategoriaTipo(self, filename: str = 'seaborn_barplot_categoria_tipo.png') -> str:
+        """Genera el total de montos por categoría y tipo de movimiento."""
         self._ensureDir()
         df = self.dfPrepared
 
@@ -129,6 +145,7 @@ class SeabornChartRenderer:
         return self._save(f"{self.chartsDir}{filename}")
 
     def generateCorrelationHeatmap(self, filename: str = 'seaborn_correlation_heatmap.png') -> str:
+        """Genera la matriz de correlación de las variables numéricas."""
         self._ensureDir()
         df = self.dfPrepared
 
@@ -142,7 +159,42 @@ class SeabornChartRenderer:
         plt.title('Matriz de Correlación (Variables Numéricas) - Leo Counter (Seaborn)', fontsize=14)
         return self._save(f"{self.chartsDir}{filename}")
 
+    def generateScatterFeaturesTarget(self, filename: str = 'seaborn_scatter_features_target.png') -> str:
+        """Grafica las dos entradas del modelo coloreadas por la clase."""
+        self._ensureDir()
+        df = self.dfPrepared
+
+        plt.figure(figsize=(12, 6))
+        sns.scatterplot(
+            data=df,
+            x='monto_log',
+            y='mes',
+            hue='es_ingreso',
+            palette={0: 'tomato', 1: 'seagreen'},
+            s=90,
+            edgecolor='black',
+            alpha=0.8,
+        )
+        plt.xlabel('Log(Monto + 1)', fontsize=12)
+        plt.ylabel('Mes del movimiento', fontsize=12)
+        plt.title('Variables de entrada vs variable objetivo (es_ingreso) - Leo Counter', fontsize=14)
+        plt.legend(title='es_ingreso (0=Gasto, 1=Ingreso)', fontsize=10)
+        plt.grid(alpha=0.3)
+        return self._save(f"{self.chartsDir}{filename}")
+
+    def generatePairplot(self, filename: str = 'seaborn_pairplot.png') -> str:
+        """Genera el pairplot de las variables numéricas principales."""
+        self._ensureDir()
+        df = self.dfPrepared
+        columns = ['monto_log', 'mes', 'dia_semana', 'es_fin_semana', 'es_ingreso']
+        pairplot = sns.pairplot(df[columns], hue='es_ingreso', palette={0: 'tomato', 1: 'seagreen'})
+        pairplot.figure.suptitle('Pairplot de variables numéricas - Leo Counter', y=1.02, fontsize=14)
+        pairplot.savefig(f"{self.chartsDir}{filename}", dpi=150, bbox_inches='tight')
+        plt.close(pairplot.figure)
+        return f"{self.chartsDir}{filename}"
+
     def generateAll(self) -> list:
+        """Genera todos los gráficos y devuelve sus rutas."""
         return [
             self.generateMontoHistogram(),
             self.generateMontoLogHistogram(),
@@ -152,4 +204,6 @@ class SeabornChartRenderer:
             self.generateRegplotMontoLogFecha(),
             self.generateBarplotCategoriaTipo(),
             self.generateCorrelationHeatmap(),
+            self.generateScatterFeaturesTarget(),
+            self.generatePairplot(),
         ]

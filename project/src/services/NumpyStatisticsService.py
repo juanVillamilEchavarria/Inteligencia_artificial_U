@@ -1,3 +1,5 @@
+"""Estadísticas descriptivas de los movimientos usando NumPy."""
+
 import numpy as np
 from api.MovementsGateWay import MovementsGateWay
 from app_collections.MovementsCollection import MovementsCollection
@@ -7,12 +9,10 @@ from dto.MovementNumPyDTO import MovementNumPyDTO
 
 
 class NumpyStatisticsService:
-    """
-    Servicio de estadísticas usando NumPy.
-    para el análisis exploratorio de datos (EDA).
-    """
+    """Calcula medidas descriptivas y arreglos numéricos para el EDA."""
 
     def __init__(self):
+        """Carga los movimientos desde la fuente de datos."""
         self.movements: MovementsCollection = MovementsGateWay.getData()
 
 

@@ -27,12 +27,24 @@
 - Ingresos: 14 (Media: $2,916,793, Mediana: $625,000, Máx: $25,000,000)
 - Gastos: 36 (Media: $407,914, Mediana: $165,000, Máx: $3,500,000)
 
+## Tabla antes / después
+| Momento | Filas | Columnas | Nulos |
+|---------|------:|---------:|------:|
+| Dataset original | 50 | 8 | 0 |
+| Después de limpieza | 50 | 8 | 0 |
+| Después de preparación | 50 | 39 | 0 |
+
 ## Limpieza de Datos
 - Filas antes: 50
 - Filas después: 50
+- Duplicados eliminados: 0
+- Filas con fecha inválida eliminadas: 0
+- Filas con monto inválido o no positivo eliminadas: 0
+- Outliers conservados (IQR): 10
+- Columnas de texto normalizadas: id, nombre, cuenta, categoria, tipo_movimiento, descripcion
 - Columna 'fecha' convertida a datetime: Sí
 
 No se requirieron imputaciones (dataset sin nulos).
 
 ---
-*Resumen generado automáticamente el 05/10/2026 17:27:45 por Leo Counter AI - Módulo de Preparación de Datos.*
+*Resumen generado automáticamente el 23/10/2026 20:42:32 por Leo Counter AI - Módulo de Preparación de Datos.*

@@ -17,67 +17,90 @@ Al no tener un soporte inteligente, las analiticas y reportes pueden no ser tan 
 ## Estructura del Proyecto
 
 ```
-project/src/
-├── main.py                          # Entry point: estadísticas financieras básicas
-├── eda_proyectos.py                 # Entry point: EDA con NumPy + gráficos Matplotlib
-├── data_preparation.py              # Entry point: pipeline completo de preparación de datos
-│
-├── api/                             # Acceso a datos
-│   └── MovementsGateWay.py          # Lee data.json (futuro: API real)
-│
-├── entities/                        # Entidades de dominio
-│   └── Movement.py                  # Movimiento financiero
-│
-├── app_collections/                 # Colecciones de dominio
-│   └── MovementsCollection.py       # Colección tipada con filtrado por Enum
-│
-├── enums/                           # Value Objects
-│   └── MovementFilteringKeys.py     # Claves de filtrado (cuenta, categoria, tipo, fecha)
-│
-├── dto/                             # Data Transfer Objects de estadísticas
-│   └── MovementNumPyDTO.py          # Stats NumPy (median, mean, std, min, max...)
-│
-├── services/                        # Lógica de negocio pura (cálculos)
-│   ├── StatisticsService.py         # Estadísticas con Python puro
-│   └── NumpyStatisticsService.py    # Estadísticas con NumPy (EDA)
-│
-├── pipelines/                       # Pipelines de procesamiento de datos
-│   └── transform/
-│       ├── DataPreparationPipeline.py   # Orquestador: ejecuta steps en orden
-│       ├── DataPreparationRunner.py     # Composition root: ensambla el pipeline
-│       ├── DataPreparationContext.py    # Estado compartido inmutable entre steps
-│       ├── steps/                       # Cada paso del pipeline (SRP)
-│       │   ├── DataPreparationStep.py       # ABC: contrato de los steps
-│       │   ├── LoadDataStep.py              # Carga datos vía Gateway
-│       │   ├── EdaStep.py                   # Genera EdaReport (DTO tipado)
-│       │   ├── CleanDataStep.py             # Limpieza + CleaningReport (DTO)
-│       │   ├── FeatureEngineeringStep.py    # Columnas derivadas (monto_log, es_fin_semana...)
-│       │   ├── EncodingStep.py              # pd.get_dummies() en categóricas
-│       │   └── PersistStep.py               # Guarda CSV preparado
-│       └── dtos/                        # DTOs tipados del pipeline
-│           ├── EdaReport.py               # Hallazgos EDA (shape, nulos, outliers...)
-│           └── CleaningReport.py          # Registro de imputaciones realizadas
-│
-├── outputs/                         # Generadores de artefactos (NO lógica de negocio)
-│   ├── visualization/
-│   │   ├── MatplotlibChartRenderer.py   # Gráficos Matplotlib → charts/
-│   │   └── SeabornChartRenderer.py      # Gráficos Seaborn → charts_seaborn/
-│   └── reporting/
-│       ├── FinancialReportGenerator.py  # Informe financiero Markdown
-│       └── EdaReportGenerator.py        # Resumen EDA Markdown desde DTOs
-│
-├── controllers/                     # Fachadas (adaptadores hacia entry points)
-│   ├── MovementController.py        # Expone estadísticas básicas
-│   └── MovementGraphicsController.py # Expone generación de gráficos
-│
-└── helpers/                         # Utilidades compartidas
-    └── output_helpers.py            # print_separator() para CLI
+project/
+├── data/
+│   └── proyecto_limpio.csv          # Dataset limpio exportado por el pipeline
+└── src/
+    ├── main.py                          # Entry point: estadísticas financieras básicas
+    ├── eda_proyectos.py                 # Entry point: EDA con NumPy + gráficos Matplotlib
+    ├── data_preparation.py              # Entry point: pipeline completo de preparación
+    ├── perceptron_proyecto.py           # Entry point: perceptrón desde cero (Avance 2)
+    │
+    ├── api/                             # Acceso a datos
+    │   └── MovementsGateWay.py          # Lee data.json (futuro: API real)
+    │
+    ├── entities/                        # Entidades de dominio
+    │   └── Movement.py                  # Movimiento financiero
+    │
+    ├── app_collections/                 # Colecciones de dominio
+    │   └── MovementsCollection.py       # Colección tipada con filtrado por Enum
+    │
+    ├── enums/                           # Value Objects
+    │   └── MovementFilteringKeys.py     # Claves de filtrado
+    │
+    ├── dto/                             # DTOs compartidos
+    │   ├── MovementNumPyDTO.py          # Stats NumPy
+    │   └── PerceptronTrainingDTO.py     # Pesos, sesgo e historial de entrenamiento
+    │
+    ├── services/                        # Lógica de negocio pura (cálculos)
+    │   ├── StatisticsService.py         # Estadísticas con Python puro
+    │   ├── NumpyStatisticsService.py    # Estadísticas con NumPy (EDA)
+    │   └── PerceptronService.py         # Sigmoide, pérdida, gradientes y fit (NumPy puro)
+    │
+    ├── pipelines/
+    │   ├── transform/                   # Pipeline de preparación de datos
+    │   │   ├── DataPreparationPipeline.py   # Orquestador
+    │   │   ├── DataPreparationRunner.py     # Composition root
+    │   │   ├── DataPreparationContext.py    # Estado inmutable
+    │   │   ├── steps/
+    │   │   │   ├── DataPreparationStep.py       # ABC
+    │   │   │   ├── LoadDataStep.py              # Carga vía Gateway
+    │   │   │   ├── EdaStep.py                   # Genera EdaReport
+    │   │   │   ├── CleanDataStep.py             # Limpieza + CleaningReport
+    │   │   │   ├── FeatureEngineeringStep.py    # monto_log, es_ingreso, mes...
+    │   │   │   ├── EncodingStep.py              # pd.get_dummies()
+    │   │   │   └── PersistStep.py               # Guarda data/proyecto_limpio.csv
+    │   │   └── dtos/
+    │   │       ├── EdaReport.py
+    │   │       └── CleaningReport.py
+    │   └── train/                       # Pipeline de entrenamiento del perceptrón
+    │       ├── PerceptronTrainingPipeline.py    # Orquestador
+    │       ├── PerceptronTrainingRunner.py      # Composition root
+    │       ├── PerceptronTrainingContext.py     # Estado inmutable
+    │       ├── steps/
+    │       │   ├── TrainingStep.py              # ABC
+    │       │   ├── LoadPreparedDataStep.py      # Carga el CSV preparado
+    │       │   ├── SelectFeaturesStep.py        # Target + dos entradas
+    │       │   ├── StandardizeStep.py           # Estandarización
+    │       │   ├── TrainPerceptronStep.py       # Descenso del gradiente
+    │       │   └── EvaluateStep.py              # Pesos, pérdida y exactitud
+    │       └── dtos/
+    │           ├── PerceptronReport.py
+    │           └── PredictionResult.py
+    │
+    ├── outputs/                         # Generadores de artefactos (sin lógica de negocio)
+    │   ├── visualization/
+    │   │   ├── MatplotlibChartRenderer.py       # Gráficos Matplotlib → src/charts/
+    │   │   ├── SeabornChartRenderer.py          # Gráficos Seaborn → src/charts_seaborn/
+    │   │   └── PerceptronChartRenderer.py       # Curva y frontera → src/charts_perceptron/
+    │   └── reporting/
+    │       ├── FinancialReportGenerator.py
+    │       └── EdaReportGenerator.py
+    │
+    ├── controllers/                     # Fachadas hacia los entry points
+    │   ├── MovementController.py
+    │   ├── MovementGraphicsController.py
+    │   └── PerceptronController.py
+    │
+    └── helpers/
+        ├── output_helpers.py            # print_separator() para CLI
+        └── project_paths.py             # Rutas canónicas del proyecto
 ```
 
 **Principios de la arquitectura:**
-- **services/**: solo lógica de negocio (cálculos estadísticos). Sin prints ni generación de artefactos.
+- **services/**: solo lógica de negocio (cálculos estadísticos y matemática del perceptrón). Sin prints ni generación de artefactos.
 - **outputs/**: generadores de artefactos (imágenes, reportes). Reciben datos ya procesados.
-- **pipelines/**: flujos de transformación de datos descompuestos en steps atómicos y extensibles, con estado compartido **inmutable** (`DataPreparationContext`, `dataclasses.replace`) y resultados en **DTOs tipados** (nunca dicts inseguros).
+- **pipelines/**: flujos descompuestos en steps atómicos y extensibles, con estado compartido **inmutable** (`@dataclass(frozen=True)` + `dataclasses.replace`) y resultados en **DTOs tipados**.
 - **controllers/**: fachadas simples que desacoplan los entry points de los services.
 
 ---
@@ -148,7 +171,7 @@ Proporcionar insights avanzados y accionables:
 
 ### Variables Analizadas
 
-Se analizaron las siguientes variables del dataset de 49 transacciones financieras:
+Se analizaron las siguientes variables del dataset de 50 transacciones financieras:
 
 - **`monto`** (numérica continua): Valor de cada transacción en pesos colombianos (COP).
 - **`tipo_movimiento`** (categórica binaria): Clasifica cada transacción como "Ingreso" o "Gasto".
@@ -158,11 +181,11 @@ Se analizaron las siguientes variables del dataset de 49 transacciones financier
 
 | Métrica | Ingresos | Gastos | Todos los montos |
 |---------|----------|--------|-----------------|
-| Cantidad | 14 | 35 | 49 |
-| Suma total | $40,835,100.00 | $14,534,900.00 | $55,369,000.00 |
-| Media | $2,916,792.86 | $415,282.86 | $1,129,979.59 |
-| Mediana | $775,000.00 | $220,000.00 | $250,000.00 |
-| Desv. Estándar | $6,287,456.32 | $640,891.45 | $4,267,891.23 |
+| Cantidad | 14 | 36 | 50 |
+| Suma total | $40,835,100.00 | $14,684,900.00 | $55,520,000.00 |
+| Media | $2,916,792.86 | $407,913.89 | $1,110,400.00 |
+| Mediana | $625,000.00 | $165,000.00 | $250,000.00 |
+| Desv. Estándar | $6,261,617.28 | $701,730.50 | $3,549,888.83 |
 | Mínimo | $120,000.00 | $5,000.00 | $5,000.00 |
 | Máximo | $25,000,000.00 | $3,500,000.00 | $25,000,000.00 |
 
@@ -170,7 +193,7 @@ Se analizaron las siguientes variables del dataset de 49 transacciones financier
 
 1. **Alta asimetría en ingresos**: La media ($2.9M) es mucho mayor que la mediana ($775K), lo que indica que pocos valores extremos (venta de vehículo por $25M) jalan el promedio hacia arriba. Esto confirma la presencia de **outliers** que el Puntaje Z deberá detectar.
 
-2. **Gastos más homogéneos**: La desviación estándar de gastos ($640K) es proporcionalmente menor que la de ingresos, indicando un patrón de consumo más estable y predecible.
+2. **Gastos más homogéneos**: La desviación estándar de gastos ($701.7K) es proporcionalmente menor que la de ingresos ($6.26M), indicando un patrón de consumo más estable y predecible.
 
 3. **Distribución sesgada a la derecha**: El histograma muestra que la mayoría de transacciones se concentran en montos bajos (< $500K), con una cola larga hacia valores altos.
 
@@ -188,9 +211,9 @@ Se analizaron las siguientes variables del dataset de 49 transacciones financier
 
 | Gráfico | Archivo | Descripción |
 |---------|---------|-------------|
-| Histograma de montos | `charts/histograma_montos.png` | Distribución de todos los montos con líneas de media y mediana |
-| Dispersión monto vs tipo | `charts/dispersion_monto_tipo.png` | Relación entre monto y tipo de movimiento |
-| Boxplot por categoría | `charts/boxplot_gastos_categoria.png` | Distribución de gastos por categoría |
+| Histograma de montos | `src/charts/histograma_montos.png` | Distribución de todos los montos con líneas de media y mediana |
+| Dispersión monto vs tipo | `src/charts/dispersion_monto_tipo.png` | Relación entre monto y tipo de movimiento |
+| Boxplot por categoría | `src/charts/boxplot_gastos_categoria.png` | Distribución de gastos por categoría |
 
 ---
 
@@ -205,21 +228,31 @@ cd project
 python src/data_preparation.py
 ```
 
-### 1. Valores Nulos Encontrados y Manejo
+### 1. Limpieza de Datos y Tabla Antes / Después
 
-**Hallazgo**: El dataset original (50 transacciones, 8 columnas) **no presenta valores nulos** en ningún campo (`total_nulls = 0`).
+**Hallazgo**: El dataset original tiene **50 transacciones y 8 columnas**, sin valores nulos y sin filas duplicadas exactas. Sin embargo, el archivo original contenía **16 IDs repetidos** que afectaban a 21 transacciones distintas; por eso los identificadores se regeneraron como **UUID v7 únicos** (50 IDs únicos para 50 filas), sin modificar los demás campos.
 
-**Estrategia implementada en `MovementDataPreparationService.clean_data()`**:
-- Aunque no hay nulos en el dataset actual, el servicio incluye lógica robusta de imputación:
-  - **Variables numéricas** (`monto`, etc.): Imputación con **mediana** (robusta a outliers)
-  - **Variables categóricas** (`categoria`, `cuenta`, etc.): Imputación con **moda** (valor más frecuente)
-- Conversión de `fecha` a `datetime` con `errors='coerce'` para manejar formatos inválidos
+**Estrategia implementada en `CleanDataStep`**:
+- **Normalización de texto**: `strip()` y colapso de espacios en `id`, `nombre`, `cuenta`, `categoria`, `tipo_movimiento` y `descripcion`. Esto corrigió el valor `'Banco Bogota '`.
+- **Tipos**: `monto` se convierte a numérico y `fecha` a `datetime` con `errors='coerce'`.
+- **Valores imposibles**: se descartan filas con fechas inválidas o montos no numéricos/no positivos, y se reporta cuántas se eliminaron (0 en este dataset).
+- **Duplicados**: se aplica `drop_duplicates()` y se reporta el número eliminado (0 en este dataset).
+- **Nulos**: imputación con **mediana** para variables numéricas y **moda** para categóricas (0 en este dataset).
+- **Outliers**: **no se eliminan**. Se conservan 10 transacciones (20%) y se usa `monto_log` para reducir su impacto, porque corresponden a eventos reales como la venta de un vehículo ($25M) y una matrícula.
 
-**Justificación**: La mediana se prefiere sobre la media para variables financieras debido a la alta asimetría (skewness = 6.3) y presencia de outliers extremos (venta de vehículo $25M), que distorsionan la media.
+**Tabla antes / después**:
+
+| Momento | Filas | Columnas | Nulos |
+|---------|------:|---------:|------:|
+| Dataset original | 50 | 8 | 0 |
+| Después de limpieza | 50 | 8 | 0 |
+| Después de preparación | 50 | 39 | 0 |
+
+**Justificación**: La mediana se prefiere sobre la media para variables financieras debido a la alta asimetría (skewness = 6.3) y a los outliers extremos, que distorsionan la media.
 
 ### 2. Variables Categóricas Codificadas
 
-**Método**: `pd.get_dummies()` (One-Hot Encoding) aplicado en `MovementDataPreparationService.encode_categorical_variables()`
+**Método**: `pd.get_dummies()` (One-Hot Encoding) aplicado en `EncodingStep`.
 
 | Variable Original | Cardinalidad | Columnas Dummy Generadas | Prefijo |
 |-------------------|--------------|--------------------------|---------|
@@ -228,72 +261,68 @@ python src/data_preparation.py
 | `cuenta` | 11 únicas | 11 | `cuenta_` |
 | **Total** | — | **26 columnas dummy** | — |
 
-**Dataset final**: 50 filas × 39 columnas (8 originales + 5 derivadas + 26 dummies)
+**Dataset final**: 50 filas × 39 columnas (8 originales + 5 derivadas + 26 dummies).
 
 **Ejemplos de columnas generadas**:
 - `categoria_Alimentación`, `categoria_Transporte`, `categoria_Otros Ingresos`, ...
 - `tipo_movimiento_Gasto`, `tipo_movimiento_Ingreso`
-- `cuenta_Banco Bogota `, `cuenta_Nequi`, `cuenta_Bancolombia`, ...
+- `cuenta_Banco Bogota`, `cuenta_Nequi`, `cuenta_Bancolombia`, ...
 
 ### 3. Columnas Derivadas Creadas
 
 | Columna | Tipo | Fórmula / Lógica | Propósito |
 |---------|------|------------------|-----------|
-| `monto_log` | Numérica continua | `np.log1p(monto)` | **Normalización para ML**: Reduce asimetría extrema (skew 6.3 → ~1.2), estabiliza varianza, mejora convergencia en modelos (Z-score, Naive Bayes, regresión) |
-| `es_ingreso` | Binaria (0/1) | `(tipo_movimiento == 'Ingreso').astype(int)` | **Target binario / Feature**: Permite clasificación supervisada y separación rápida Ingreso/Gasto en modelos |
-| `mes` | Numérica discreta (1-12) | `fecha.dt.month` | **Estacionalidad**: Detectar patrones mensuales (ej. gastos navideños, matrículas) |
-| `dia_semana` | Numérica discreta (0-6) | `fecha.dt.dayofweek` (Lun=0) | **Patrones semanales**: Diferenciar días laborables vs fines de semana |
-| `es_fin_semana` | Binaria (0/1) | `(dia_semana >= 5).astype(int)` | **Feature conductual**: Identificar comportamiento de gasto distinto en fines de semana |
+| `monto_log` | Numérica continua | `np.log1p(monto)` | **Normalización para ML**: reduce asimetría extrema (skew 6.3 → ~1.2), estabiliza varianza y mejora la convergencia |
+| `es_ingreso` | Binaria (0/1) | `(tipo_movimiento == 'Ingreso').astype(int)` | **Variable objetivo**: clasificación binaria Ingreso/Gasto |
+| `mes` | Numérica discreta (1-12) | `fecha.dt.month` | **Estacionalidad**: patrones mensuales |
+| `dia_semana` | Numérica discreta (0-6) | `fecha.dt.dayofweek` (Lun=0) | **Patrones semanales** |
+| `es_fin_semana` | Binaria (0/1) | `(dia_semana >= 5).astype(int)` | **Feature conductual** |
 
 **Impacto en modelos futuros**:
-- `monto_log`: Esencial para **Puntaje Z** (asume normalidad) y **Naive Bayes** (Gaussiano)
-- `es_ingreso`: Target natural para clasificación binaria
-- `es_fin_semana` + `mes`: Features temporales para detectar estacionalidad en **reportes enriquecidos**
+- `monto_log`: esencial para **Puntaje Z** (asume normalidad) y **Naive Bayes** (Gaussiano).
+- `es_ingreso`: target natural para clasificación binaria y para el perceptrón del Avance 2.
+- `es_fin_semana` + `mes`: features temporales para reportes enriquecidos.
 
 ### 4. Hallazgos de las Visualizaciones Seaborn
 
-Se generaron **9 gráficos** en `charts_seaborn/`:
+Se generaron **10 gráficos** en `src/charts_seaborn/`:
 
 | Gráfico | Archivo | Hallazgo Principal |
 |---------|---------|-------------------|
-| **Histograma Monto** | `seaborn_histograma_monto.png` | Distribución **extremadamente sesgada a derecha** (cola larga). Mayoría transacciones < $500K. Outliers visibles > $5M. |
-| **Histograma Log(Monto)** | `seaborn_histograma_monto_log.png` | Transformación log **normaliza la distribución** (aprox. gaussiana), validando uso de `monto_log` para modelos paramétricos. |
-| **Boxplot por Categoría** | `seaborn_boxplot_categoria.png` | **Alta variabilidad inter-categoría**: "Otros Ingresos" y "Independiente" tienen medianas altas y outliers; "Transporte" y "Entretenimiento" son bajos y consistentes. |
-| **Boxplot por Tipo** | `seaborn_boxplot_tipo.png` | **Ingresos**: Mediana $625K, outliers hasta $25M. **Gastos**: Mediana $165K, outliers hasta $3.5M. Confirma necesidad de **umbrales Z-score separados**. |
-| **Scatter Fecha vs Monto** | `seaborn_scatter_monto_fecha.png` | **Eventos puntuales**: Junio 2024 muestra cluster de gastos altos (matrícula $2.5M, laptop $3.5M). Venta vehículo agosto 2026 ($25M) es outlier temporal claro. |
-| **Regresión Log(Monto) vs Tiempo** | `seaborn_regplot_monto_log_fecha.png` | **Tendencia ligeramente positiva** en log-monto a lo largo del tiempo, sugiriendo crecimiento gradual de montos promedio. |
-| **Barplot Categoría × Tipo** | `seaborn_barplot_categoria_tipo.png` | **Asimetría categórica**: "Otros Ingresos" domina ingresos ($29M+); "Otros Gastos", "Servicios Públicos", "Vivienda" lideran gastos. "Independiente" aparece en ambos. |
-| **Heatmap Correlación** | `seaborn_correlation_heatmap.png` | **Correlaciones clave**: `monto` ↔ `monto_log` (0.98), `es_ingreso` ↔ `monto` (0.31), `es_fin_semana` ↔ `monto` (~0.05 sin relación). Features temporales débilmente correlacionadas con monto. |
-| **Pairplot** | `seaborn_pairplot.png` | **Separación visual** Ingreso/Gasto clara en `monto` y `monto_log`. `es_fin_semana` no discrimina montos. |
+| **Histograma Monto** | `seaborn_histograma_monto.png` | Distribución **extremadamente sesgada a derecha** (cola larga). Mayoría de transacciones < $500K. Outliers visibles > $5M. |
+| **Histograma Log(Monto)** | `seaborn_histograma_monto_log.png` | La transformación log **normaliza la distribución** (aprox. gaussiana), validando `monto_log` para modelos paramétricos. |
+| **Boxplot por Categoría** | `seaborn_boxplot_categoria.png` | **Alta variabilidad inter-categoría**: "Otros Ingresos" e "Independiente" tienen medianas altas y outliers; "Transporte" y "Entretenimiento" son bajos y consistentes. |
+| **Boxplot por Tipo** | `seaborn_boxplot_tipo.png` | **Ingresos**: mediana $625K, outliers hasta $25M. **Gastos**: mediana $165K, outliers hasta $3.5M. Confirma la necesidad de **umbrales Z-score separados**. |
+| **Scatter Fecha vs Monto** | `seaborn_scatter_monto_fecha.png` | **Eventos puntuales**: junio 2024 muestra un clúster de gastos altos (matrícula $2.5M, laptop $3.5M). La venta de vehículo de agosto 2026 ($25M) es un outlier temporal claro. |
+| **Regresión Log(Monto) vs Tiempo** | `seaborn_regplot_monto_log_fecha.png` | **Tendencia ligeramente positiva** en log-monto a lo largo del tiempo. |
+| **Barplot Categoría × Tipo** | `seaborn_barplot_categoria_tipo.png` | **Asimetría categórica**: "Otros Ingresos" domina ingresos; "Otros Gastos", "Servicios Públicos" y "Vivienda" lideran gastos. "Independiente" aparece en ambos. |
+| **Heatmap Correlación** | `seaborn_correlation_heatmap.png` | **Correlaciones clave**: `monto` ↔ `monto_log` (0.98), `es_ingreso` ↔ `monto` (0.31), `es_fin_semana` ↔ `monto` (~0.05). |
+| **Scatter Entradas × Target** | `seaborn_scatter_features_target.png` | Relaciona directamente `monto_log` y `mes` con `es_ingreso`. Los ingresos tienden a concentrarse en montos más altos. Es el gráfico de soporte del perceptrón. |
+| **Pairplot** | `seaborn_pairplot.png` | **Separación visual** Ingreso/Gasto en `monto_log`. `es_fin_semana` no discrimina montos. |
 
 ### 5. Hallazgos Relevantes para el Proyecto
 
-1. **Outliers críticos detectados**: 10 transacciones (20%) son outliers por IQR. La venta de vehículo ($25M) y matrícula ($2.5M) son **eventos atípicos reales**, no errores. El **Puntaje Z debe usar umbrales por tipo de movimiento**.
+1. **Outliers críticos detectados**: 10 transacciones (20%) son outliers por IQR. La venta de vehículo ($25M) y la matrícula ($2.5M) son **eventos atípicos reales**, no errores. El **Puntaje Z debe usar umbrales por tipo de movimiento**.
 
 2. **Asimetría extrema corregida**: `monto_log` reduce skewness de **6.3 → 1.2**, haciendo los datos aptos para modelos que asumen normalidad.
 
-3. **Desbalance de clases**: 72% Gastos / 28% Ingresos. Modelo Naive Bayes requerirá **class_weight='balanced'** o sampling.
+3. **Desbalance de clases**: 72% Gastos / 28% Ingresos. El perceptrón obtiene 78% de exactitud frente a 72% de la clase mayoritaria; en el proyecto final se requerirá **class_weight='balanced'** o sampling.
 
-4. **Cardinalidad alta en `cuenta` (11)**: 11 cuentas para 50 transacciones → riesgo de overfitting. Considerar **agrupar cuentas minoritarias** o usar **Target Encoding** en futuras iteraciones.
+4. **Cardinalidad alta en `cuenta` (11)**: 11 cuentas para 50 transacciones → riesgo de overfitting. Considerar **agrupar cuentas minoritarias** o usar **Target Encoding**.
 
-5. **Patrón temporal**: Junio 2024 concentra gastos extraordinarios (educación, tecnología). Feature `mes` captura esto para alertas estacionales.
+5. **Patrón temporal**: junio 2024 concentra gastos extraordinarios (educación, tecnología). La feature `mes` captura esto para alertas estacionales.
 
-6. **Fin de semana no es predictor**: `es_fin_semana` correlación ~0.05 con monto → no útil como feature principal, pero puede servir en interacciones.
+6. **Fin de semana no es predictor**: `es_fin_semana` tiene correlación ~0.05 con monto.
 
 ### 6. Archivos Generados
 
 | Archivo | Descripción |
 |---------|-------------|
-| `data_prepared.csv` | Dataset completo listo para ML (50×39) |
-| `charts_seaborn/seaborn_histograma_monto.png` | Histograma monto original |
-| `charts_seaborn/seaborn_histograma_monto_log.png` | Histograma monto normalizado |
-| `charts_seaborn/seaborn_boxplot_categoria.png` | Boxplot por categoría |
-| `charts_seaborn/seaborn_boxplot_tipo.png` | Boxplot Ingreso vs Gasto |
-| `charts_seaborn/seaborn_scatter_monto_fecha.png` | Dispersión temporal |
-| `charts_seaborn/seaborn_regplot_monto_log_fecha.png` | Regresión temporal log-monto |
-| `charts_seaborn/seaborn_barplot_categoria_tipo.png` | Barras apiladas categoría×tipo |
-| `charts_seaborn/seaborn_correlation_heatmap.png` | Matriz correlación numérica |
-| `charts_seaborn/seaborn_pairplot.png` | Pairplot variables clave |
+| `data/proyecto_limpio.csv` | Dataset completo listo para ML (50×39) |
+| `src/eda_summary.md` | Resumen EDA + tabla antes/después |
+| `src/charts_seaborn/*.png` | 10 gráficos Seaborn |
+| `src/charts_perceptron/curva_aprendizaje.png` | Pérdida y exactitud por época |
+| `src/charts_perceptron/frontera_decision.png` | Frontera de decisión del perceptrón |
 
 ### 7. Arquitectura de Servicios Utilizada
 
@@ -304,20 +333,124 @@ src/
 ├── api/MovementsGateWay.py                    # Data Access (JSON → Collection)
 ├── app_collections/MovementsCollection.py     # Domain Collection + to_dataframe()
 ├── entities/Movement.py                       # Domain Entity
-├── services/
-│   ├── MovementDataPreparationService.py      # 🆕 EDA, Limpieza, Encoding, Features (Pandas)
-│   └── MovementSeabornGraphicsService.py      # 🆕 Visualizaciones Seaborn (SRP)
-├── controllers/
-│   └── MovementDataPreparationController.py   # 🆕 Facade para preparation service
-├── data_preparation.py                        # 🆕 Entry Point CLI
-└── helpers/output_helpers.py                  # Shared: print_separator()
+├── pipelines/transform/                       # Pipeline de preparación
+│   ├── DataPreparationPipeline.py             # Orquestador
+│   ├── DataPreparationRunner.py               # Composition root
+│   ├── DataPreparationContext.py              # Estado inmutable
+│   ├── steps/                                 # Un step por responsabilidad (SRP)
+│   │   ├── LoadDataStep.py
+│   │   ├── EdaStep.py
+│   │   ├── CleanDataStep.py
+│   │   ├── FeatureEngineeringStep.py
+│   │   ├── EncodingStep.py
+│   │   └── PersistStep.py
+│   └── dtos/
+│       ├── EdaReport.py
+│       └── CleaningReport.py
+├── pipelines/train/                           # Pipeline del perceptrón
+│   ├── PerceptronTrainingPipeline.py
+│   ├── PerceptronTrainingRunner.py
+│   ├── PerceptronTrainingContext.py
+│   ├── steps/
+│   └── dtos/
+├── services/PerceptronService.py               # Matemática pura con NumPy
+├── outputs/visualization/PerceptronChartRenderer.py
+├── controllers/PerceptronController.py
+├── data_preparation.py                        # Entry point de preparación
+└── perceptron_proyecto.py                     # Entry point del perceptrón
 ```
 
 **Principios aplicados**:
-- **SRP**: Servicios separados para preparación (`MovementDataPreparationService`) y visualización Seaborn (`MovementSeabornGraphicsService`)
-- **Dependency Injection**: Controller recibe Service por constructor
-- **Single Source of Truth**: `MovementsGateWay` única fuente de datos
-- **Extensibilidad**: Nuevos servicios no modifican existentes (`MovementGraphicsService` matplotlib intacto)
+- **SRP**: cada step tiene una única responsabilidad; el modelo matemático vive en `PerceptronService` y los gráficos en su propio renderer.
+- **Dependency Injection**: runner y controller reciben sus dependencias por constructor.
+- **Single Source of Truth**: `MovementsGateWay` es la única fuente de datos crudos.
+- **Estado inmutable**: los contextos son `@dataclass(frozen=True)` y cada step devuelve una copia con `dataclasses.replace`.
+- **DTOs tipados**: los resultados no se pasan como diccionarios sueltos.
+
+---
+
+## Avance 2: preparación, visualización y perceptrón desde cero
+
+Esta sección resume el entregable del segundo corte: dataset limpio, análisis visual, perceptrón implementado con NumPy y plan hacia el proyecto final.
+
+### 1. Ajustes y calidad de datos
+
+- Se regeneraron los **IDs como UUID v7 únicos** (50 IDs para 50 transacciones), sin alterar montos, fechas, cuentas, categorías ni descripciones.
+- Se normalizaron espacios en columnas de texto; por ejemplo, `'Banco Bogota '` pasó a `'Banco Bogota'`.
+- Se verificó que no hay nulos, filas duplicadas exactas, montos no positivos ni fechas inválidas.
+- Se conservaron los **10 outliers** (20%) porque son eventos financieros reales; `monto_log` reduce su influencia.
+- El dataset limpio se exporta a **`project/data/proyecto_limpio.csv`** (50 filas × 39 columnas).
+
+### 2. Perceptrón implementado
+
+- **Variable objetivo**: `es_ingreso` (1 = Ingreso, 0 = Gasto).
+- **Entradas**: `monto_log` y `mes`, ambas estandarizadas con media y desviación del conjunto de entrenamiento.
+- **Modelo**: sigmoide + pérdida logarítmica + descenso del gradiente, implementado únicamente con **NumPy** (sin Scikit-Learn).
+- **Entrenamiento**: 50 transacciones, `learning_rate = 0.1`, 500 épocas.
+- **Pipeline**: `pipelines/train/` con steps atómicos (`LoadPreparedDataStep`, `SelectFeaturesStep`, `StandardizeStep`, `TrainPerceptronStep`, `EvaluateStep`).
+- **Gráficos**: `src/charts_perceptron/curva_aprendizaje.png` y `src/charts_perceptron/frontera_decision.png`.
+
+### 3. Resultados del perceptrón
+
+| Métrica | Valor |
+|---|---:|
+| Filas de entrenamiento | 50 |
+| Clase 0 (Gasto) | 36 |
+| Clase 1 (Ingreso) | 14 |
+| Pesos finales | `w1 = 1.3141`, `w2 = 0.1906` |
+| Sesgo | `b = -1.2329` |
+| Pérdida inicial | 0.6931 |
+| Pérdida final | 0.4678 |
+| Exactitud inicial | 28.00% |
+| Exactitud final | 78.00% |
+| Exactitud de la clase mayoritaria | 72.00% |
+
+**Interpretación**:
+- `w1 > 0`: a mayor `monto_log`, mayor probabilidad de que el movimiento sea un ingreso.
+- `w2 > 0`: meses más avanzados del año aumentan ligeramente la probabilidad de ingreso.
+- `b < 0`: con montos bajos y meses tempranos, el modelo tiende a predecir gasto.
+- El modelo supera la línea base (78% vs 72%), pero los datos no son perfectamente separables: hay gastos altos que se confunden con ingresos.
+- Limitaciones: solo dos variables, dataset pequeño, entrenamiento y evaluación sobre las mismas 50 filas y desbalance 72/28.
+
+### 4. Predicción de casos nuevos
+
+| Monto | Mes | Probabilidad de ingreso | Decisión |
+|---:|---:|---:|---|
+| $8.000 | 6 | 2.18% | Gasto |
+| $3.500.000 | 4 | 60.65% | Ingreso |
+| $250.000 | 5 | 20.24% | Gasto |
+
+### 5. Cómo ejecutar con Docker
+
+El `Dockerfile` y `docker-compose.yml` no se modificaron. Desde la carpeta `project/`:
+
+```bash
+# Construir la imagen (solo la primera vez o si cambian dependencias)
+docker compose build
+
+# 1) Generar el dataset limpio, el resumen EDA y los gráficos Seaborn
+docker compose run --rm app python src/data_preparation.py
+
+# 2) Entrenar el perceptrón y generar sus gráficos
+docker compose run --rm app python src/perceptron_proyecto.py
+```
+
+También se puede ejecutar sin Docker desde `project/`:
+
+```bash
+python3 src/data_preparation.py
+python3 src/perceptron_proyecto.py
+```
+
+El perceptrón requiere que exista `data/proyecto_limpio.csv`; si no existe, el script indica que se debe ejecutar primero `data_preparation.py`.
+
+### 6. Plan hacia el proyecto final
+
+- **Tipo de problema**: clasificación (primero binaria `es_ingreso`; luego clasificación semántica de subcategorías y detección de anomalías).
+- **Modelos a comparar en la Clase 12**: regresión logística, árbol de decisión y bosque aleatorio. Complementariamente, Naive Bayes Multinomial para texto y Puntaje Z para anomalías.
+- **Métrica principal**: F1-score macro y recall de la clase minoritaria (Ingreso), porque el dataset está desbalanceado y no conviene optimizar solo exactitud.
+- **Demostración final**: cargar transacciones nuevas desde JSON/CSV, mostrar la probabilidad y la clase predicha, y luego extender la demostración a subcategorías y alertas de anomalías.
+- **Cronograma**: entrega del Avance 2 (25 de octubre), comparación de modelos en la Clase 12 (9 de noviembre), integración y pruebas (16 de noviembre), sustentación final (23 o 30 de noviembre).
 
 ---
 

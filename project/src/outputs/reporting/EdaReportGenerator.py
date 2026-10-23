@@ -1,3 +1,5 @@
+"""Generación del resumen EDA en formato Markdown."""
+
 from datetime import datetime
 
 from pipelines.transform.dtos.EdaReport import EdaReport
@@ -5,8 +7,18 @@ from pipelines.transform.dtos.CleaningReport import CleaningReport
 
 
 class EdaReportGenerator:
+    """Convierte los reportes de EDA y limpieza en un documento legible."""
+
     def generate(self, edaReport: EdaReport, cleaningReport: CleaningReport = None,
-                 outputPath: str = 'eda_summary.md') -> str:
+                 outputPath: str = 'eda_summary.md', preparedShape=None) -> str:
+        """Escribe el resumen en Markdown y devuelve la ruta del archivo.
+
+        Args:
+            edaReport: Resultados del análisis exploratorio.
+            cleaningReport: Cambios realizados durante la limpieza.
+            outputPath: Archivo donde se guarda el resumen.
+            preparedShape: Dimensiones finales del dataset, si se conocen.
+        """
         if edaReport is None:
             raise ValueError("No hay reporte de EDA para generar el resumen.")
 
@@ -16,7 +28,7 @@ class EdaReportGenerator:
         topCategories = dict(list(edaReport.categoriaDist.items())[:5])
         topAccounts = dict(list(edaReport.cuentaDist.items())[:5])
 
-        cleaningSection = self._buildCleaningSection(cleaningReport)
+        cleaningSection = self._buildCleaningSection(cleaningReport, preparedShape)
 
         markdown = f"""# Resumen EDA - Leo Counter (Pandas + Seaborn)
 
@@ -57,19 +69,39 @@ class EdaReportGenerator:
         return outputPath
 
     def _formatNonZeroDict(self, d: dict) -> str:
+        """Muestra solo las columnas que realmente tienen nulos."""
         nonZero = {k: v for k, v in d.items() if v > 0}
         return str(nonZero) if nonZero else "{}"
 
-    def _buildCleaningSection(self, report: CleaningReport) -> str:
+    def _buildCleaningSection(self, report: CleaningReport, preparedShape=None) -> str:
+        """Construye la sección de limpieza con la tabla antes y después."""
         if report is None:
             return ""
 
         lines = [
+            "## Tabla antes / después",
+            "| Momento | Filas | Columnas | Nulos |",
+            "|---------|------:|---------:|------:|",
+            f"| Dataset original | {report.rowsBefore} | {report.columnsBefore} | {report.nullsBefore} |",
+            f"| Después de limpieza | {report.rowsAfter} | {report.columnsAfter} | {report.nullsAfter} |",
+        ]
+        if preparedShape is not None:
+            lines.append(
+                f"| Después de preparación | {preparedShape[0]} | {preparedShape[1]} | 0 |"
+            )
+
+        lines.extend([
+            "",
             "## Limpieza de Datos",
             f"- Filas antes: {report.rowsBefore}",
             f"- Filas después: {report.rowsAfter}",
+            f"- Duplicados eliminados: {report.duplicatesRemoved}",
+            f"- Filas con fecha inválida eliminadas: {report.invalidDatesRemoved}",
+            f"- Filas con monto inválido o no positivo eliminadas: {report.invalidAmountsRemoved}",
+            f"- Outliers conservados (IQR): {report.outliersKept}",
+            f"- Columnas de texto normalizadas: {', '.join(report.normalizedColumns) if report.normalizedColumns else 'Ninguna'}",
             f"- Columna 'fecha' convertida a datetime: {'Sí' if report.fechaConverted else 'No'}",
-        ]
+        ])
         if report.imputations:
             lines.append("\n### Imputaciones realizadas")
             lines.append("| Columna | Estrategia | Valor | Nulos imputados |")

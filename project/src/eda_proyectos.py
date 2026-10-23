@@ -1,10 +1,14 @@
+"""Análisis exploratorio con NumPy y gráficos básicos con Matplotlib."""
+
 from services.NumpyStatisticsService import NumpyStatisticsService
 from outputs.visualization.MatplotlibChartRenderer import MatplotlibChartRenderer
 from controllers.MovementGraphicsController import MovementGraphicsController
 from helpers.output_helpers import print_separator
+from helpers.project_paths import CHARTS_DIR
 from dto.MovementNumPyDTO import MovementNumPyDTO
 
-def print_stats(title: str, stats: MovementNumPyDTO ):
+def print_stats(title: str, stats: MovementNumPyDTO):
+    """Imprime las estadísticas de un conjunto de montos."""
     print(f"\n   {title}")
     print(f"     Cantidad    : {stats.count}")
     print(f"     Suma total  : ${stats.sum:,.2f}")
@@ -16,6 +20,7 @@ def print_stats(title: str, stats: MovementNumPyDTO ):
 
 
 def main():
+    """Calcula las estadísticas, las muestra y genera los gráficos del EDA."""
     numpy_service = NumpyStatisticsService()
     chart_renderer = MatplotlibChartRenderer(numpy_service)
     graphics_controller = MovementGraphicsController(chart_renderer)
@@ -38,7 +43,7 @@ def main():
     graphics_controller.generateAll()
 
     print_separator("EDA COMPLETADO")
-    print("  Gráficos guardados en: /charts/")
+    print(f"  Gráficos guardados en: {CHARTS_DIR}/")
     print()
 
 

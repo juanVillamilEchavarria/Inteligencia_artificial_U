@@ -1,12 +1,18 @@
+"""Generación del informe estadístico de finanzas en Markdown."""
+
 from controllers.MovementController import MovementController
 from datetime import datetime
 
 
 class FinancialReportGenerator:
+    """Toma las estadísticas del controlador y redacta el informe."""
+
     def __init__(self, controller: MovementController):
+        """Recibe el controlador que entrega los totales y promedios."""
         self.controller = controller
 
     def generate(self, outputPath: str = 'informe_proyecto.md') -> str:
+        """Escribe el informe en la ruta indicada y la devuelve."""
         totalIncomes = self.controller.getTotalIncomes()
         totalExpenses = self.controller.getTotalExpenses()
         avgIncomes = self.controller.getIncomesAverage()

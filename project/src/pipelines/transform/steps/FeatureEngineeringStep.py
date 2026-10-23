@@ -1,3 +1,5 @@
+"""Paso que crea las variables derivadas usadas por el modelo."""
+
 from dataclasses import replace
 
 import numpy as np
@@ -7,11 +9,15 @@ from pipelines.transform.steps.DataPreparationStep import DataPreparationStep
 
 
 class FeatureEngineeringStep(DataPreparationStep):
+    """Calcula monto logarítmico, variable objetivo y variables de fecha."""
+
     @property
     def name(self) -> str:
+        """Nombre del paso dentro del pipeline."""
         return "Feature engineering"
 
     def execute(self, context: DataPreparationContext) -> DataPreparationContext:
+        """Agrega las columnas derivadas al dataframe limpio."""
         if context.dfClean is None:
             raise ValueError("FeatureEngineeringStep requiere dfClean (falta CleanDataStep?)")
 

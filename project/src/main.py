@@ -1,4 +1,7 @@
+"""Muestra el resumen financiero básico y genera el informe estadístico."""
+
 from controllers.MovementController import MovementController
+from helpers.project_paths import SRC_DIR
 from services.StatisticsService import StatisticsService
 from outputs.reporting.FinancialReportGenerator import FinancialReportGenerator
 
@@ -16,4 +19,4 @@ print("Minimo gasto: ", controller.getMinExpense())
 
 
 report = FinancialReportGenerator(controller)
-report.generate()
+report.generate(str(SRC_DIR / 'informe_proyecto.md'))

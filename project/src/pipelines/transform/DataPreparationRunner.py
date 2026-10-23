@@ -1,3 +1,6 @@
+"""Configuración y ejecución del pipeline de preparación de datos."""
+
+from helpers.project_paths import PREPARED_DATASET_PATH
 from pipelines.transform.DataPreparationContext import DataPreparationContext
 from pipelines.transform.DataPreparationPipeline import DataPreparationPipeline
 from pipelines.transform.steps.LoadDataStep import LoadDataStep
@@ -9,7 +12,10 @@ from pipelines.transform.steps.PersistStep import PersistStep
 
 
 class DataPreparationRunner:
-    def __init__(self, outputPath: str = "data_prepared.csv"):
+    """Arma el pipeline de preparación con la ruta de salida indicada."""
+
+    def __init__(self, outputPath: str = str(PREPARED_DATASET_PATH)):
+        """Define dónde se guardará el dataset preparado."""
         self._pipeline = DataPreparationPipeline(steps=[
             LoadDataStep(),
             EdaStep(),
@@ -20,4 +26,5 @@ class DataPreparationRunner:
         ])
 
     def run(self) -> DataPreparationContext:
+        """Ejecuta la preparación y entrega el contexto resultante."""
         return self._pipeline.run()

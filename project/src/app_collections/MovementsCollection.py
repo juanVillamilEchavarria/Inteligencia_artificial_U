@@ -1,64 +1,50 @@
+"""Colección de movimientos financieros con operaciones de consulta y conversión."""
+
 from entities.Movement import Movement
 from enums.MovementFilteringKeys import MovementFilteringKeys
 from typing import List
-"""Coleccion de movimientos
 
-Methods:
-    getByKey(key: MovementFilteringKeys, value: str)
-    count()
-    getItems()
-    to_dataframe()
-"""
+
 class MovementsCollection:
-    def __init__(self, movements : List[Movement]):
+    """Agrupa una lista de movimientos y facilita su filtrado y análisis."""
+
+    def __init__(self, movements: List[Movement]):
+        """Crea la colección a partir de una lista de objetos Movement."""
         self.movements = movements
+
     @staticmethod
-    def from_dict( d: dict)->MovementsCollection:
+    def from_dict(d: dict) -> MovementsCollection:
+        """Construye una colección a partir de una lista de diccionarios."""
         return MovementsCollection(
-            movements= [Movement.from_dict(movement) for movement in d]
+            movements=[Movement.from_dict(movement) for movement in d]
         )
 
-    """
-    Filtra movimientos por key y value
+    def getByKey(self, key: MovementFilteringKeys, value: str) -> List[Movement]:
+        """Filtra los movimientos por un campo y un valor.
 
-    Args:
-        key: MovementFilteringKeys
-        value: str
+        Args:
+            key: Campo por el que se quiere filtrar.
+            value: Valor que debe tener el campo.
 
-    Returns:
-        list[Movement]
-    """
-    def getByKey(self, key: MovementFilteringKeys, value: str)-> List[Movement]:
+        Returns:
+            Los movimientos que cumplen la condición.
+        """
         filtered_movements = []
         for movement in self.movements:
-                if getattr(movement, key.value) == value:
-                    filtered_movements.append(movement)
+            if getattr(movement, key.value) == value:
+                filtered_movements.append(movement)
         return filtered_movements
-    """
-    Contar movimientos
 
-    Returns:
-        int
-    """
-    def count(self)-> int:
+    def count(self) -> int:
+        """Devuelve la cantidad de movimientos de la colección."""
         return len(self.movements)
 
-    """
-    Obtiene todos los items de la coleccion
-
-    Returns:
-        list[Movement]
-    """
-    def getItems(self)-> List[Movement]:
+    def getItems(self) -> List[Movement]:
+        """Devuelve la lista completa de movimientos."""
         return self.movements
 
-    """
-    Convierte la colección a pandas DataFrame
-
-    Returns:
-        pd.DataFrame
-    """
     def to_dataframe(self):
+        """Convierte la colección en un DataFrame de Pandas."""
         import pandas as pd
         data = []
         for movement in self.movements:

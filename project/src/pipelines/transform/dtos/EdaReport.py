@@ -1,9 +1,13 @@
+"""DTOs con los resultados del análisis exploratorio de datos."""
+
 from dataclasses import dataclass, field
 from typing import Dict, Tuple
 
 
 @dataclass(frozen=True)
 class OutlierAnalysis:
+    """Resultado de detectar valores atípicos con el rango intercuartílico."""
+
     q1: float
     q3: float
     iqr: float
@@ -15,6 +19,8 @@ class OutlierAnalysis:
 
 @dataclass(frozen=True)
 class IncomeExpenseComparison:
+    """Comparación de cantidad y montos entre ingresos y gastos."""
+
     incomeCount: int
     expenseCount: int
     incomeMean: float
@@ -27,6 +33,8 @@ class IncomeExpenseComparison:
 
 @dataclass(frozen=True)
 class EdaReport:
+    """Resumen completo del dataset antes de aplicar la limpieza."""
+
     shape: Tuple[int, int]
     nullCounts: Dict[str, int]
     totalNulls: int

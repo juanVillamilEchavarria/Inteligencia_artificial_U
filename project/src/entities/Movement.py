@@ -1,7 +1,12 @@
+"""Entidad que representa un movimiento financiero dentro del sistema."""
+
 from datetime import datetime
-""" Interface de como van a llegar los movimientos via la peticion de api"""
+
+
 class Movement:
-    id : str
+    """Movimiento financiero con los datos que llegan desde la fuente original."""
+
+    id: str
     nombre: str
     cuenta: str
     categoria: str
@@ -11,6 +16,7 @@ class Movement:
     descripcion: str
 
     def __init__(self, id, nombre, cuenta, categoria, tipo_movimiento, monto, fecha, descripcion):
+        """Crea un movimiento con todos sus campos."""
         self.id = id
         self.nombre = nombre
         self.cuenta = cuenta
@@ -19,15 +25,17 @@ class Movement:
         self.monto = monto
         self.fecha = fecha
         self.descripcion = descripcion
+
     @staticmethod
-    def from_dict( d: dict)->Movement:
-       return Movement(
-            id=d['id'],                                    
-            nombre=d['nombre'],                            
-            cuenta=d['cuenta'],                            
-            categoria=d['categoria'],                     
-            tipo_movimiento=d['tipo_movimiento'],          
-            monto=float(d['monto']),                       
-            fecha=datetime.strptime(d['fecha'], '%Y-%m-%d'),  
-            descripcion=d['descripcion'] 
-            )
+    def from_dict(d: dict) -> "Movement":
+        """Construye un Movement a partir de un diccionario con las claves del JSON."""
+        return Movement(
+            id=d['id'],
+            nombre=d['nombre'],
+            cuenta=d['cuenta'],
+            categoria=d['categoria'],
+            tipo_movimiento=d['tipo_movimiento'],
+            monto=float(d['monto']),
+            fecha=datetime.strptime(d['fecha'], '%Y-%m-%d'),
+            descripcion=d['descripcion']
+        )

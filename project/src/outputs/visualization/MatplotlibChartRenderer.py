@@ -1,8 +1,11 @@
+"""Gráficos exploratorios básicos generados con Matplotlib."""
+
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib
 matplotlib.use('Agg') 
 from enums.MovementFilteringKeys import MovementFilteringKeys
+from helpers.project_paths import CHARTS_DIR
 
 from services.NumpyStatisticsService import NumpyStatisticsService
 
@@ -10,14 +13,16 @@ from services.NumpyStatisticsService import NumpyStatisticsService
 class MatplotlibChartRenderer:
     """
     Service encargado de generar los gráficos del EDA.
-    Guarda los archivos PNG en la carpeta /charts/
+    Guarda los archivos PNG en la carpeta src/charts/
     """
 
-    def __init__(self, numpyService: NumpyStatisticsService):
+    def __init__(self, numpyService: NumpyStatisticsService, chartsDir: str = None):
+        """Recibe el servicio de estadísticas y la carpeta de salida."""
         self.service = numpyService
-        self.charts_dir = 'charts/'
+        self.charts_dir = chartsDir or f"{CHARTS_DIR}/"
 
     def _ensure_dir(self):
+        """Crea la carpeta de gráficos si todavía no existe."""
         import os
         os.makedirs(self.charts_dir, exist_ok=True)
 

@@ -1,3 +1,5 @@
+"""Paso de análisis exploratorio sobre los datos sin limpiar."""
+
 from dataclasses import replace
 
 from pipelines.transform.DataPreparationContext import DataPreparationContext
@@ -10,11 +12,15 @@ from pipelines.transform.steps.DataPreparationStep import DataPreparationStep
 
 
 class EdaStep(DataPreparationStep):
+    """Calcula distribuciones, nulos y valores atípicos del dataset original."""
+
     @property
     def name(self) -> str:
+        """Nombre del paso dentro del pipeline."""
         return "EDA"
 
     def execute(self, context: DataPreparationContext) -> DataPreparationContext:
+        """Genera el reporte EDA y lo agrega al contexto."""
         df = context.dfRaw
         if df is None:
             raise ValueError("EdaStep requiere dfRaw cargado (falta LoadDataStep?)")
@@ -39,6 +45,7 @@ class EdaStep(DataPreparationStep):
         return replace(context, edaReport=report)
 
     def _detectOutliersIqr(self, series) -> OutlierAnalysis:
+        """Calcula los límites del IQR y cuántos valores quedan por fuera."""
         q1, q3 = series.quantile(0.25), series.quantile(0.75)
         iqr = q3 - q1
         lower, upper = q1 - 1.5 * iqr, q3 + 1.5 * iqr
@@ -54,6 +61,7 @@ class EdaStep(DataPreparationStep):
         )
 
     def _splitByTipo(self, df) -> IncomeExpenseComparison:
+        """Separa ingresos y gastos para comparar sus montos."""
         ing = df[df["tipo_movimiento"] == "Ingreso"]["monto"]
         gas = df[df["tipo_movimiento"] == "Gasto"]["monto"]
         return IncomeExpenseComparison(
