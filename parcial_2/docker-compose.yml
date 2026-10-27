@@ -1,0 +1,14 @@
+services:
+    app:
+        container_name: parcial2_ia
+        build: 
+            context: .
+            dockerfile: Dockerfile
+        ports:
+            - "5000:5000"
+        volumes:
+            - ".:/app"
+
+networks:
+    default:
+        driver: bridge
