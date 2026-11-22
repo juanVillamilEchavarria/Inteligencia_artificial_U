@@ -1,12 +1,14 @@
 services:
     app:
-        build: 
+        build:
             context: .
             dockerfile: Dockerfile
-        ports:
-            - "5000:5000"
         volumes:
             - ".:/app"
+        # Mantiene el contenedor vivo y permite ejecutar comandos interactivos
+        # (por ejemplo, el menú de src/interfaz_consola.py).
+        stdin_open: true
+        tty: true
 
 networks:
     default:

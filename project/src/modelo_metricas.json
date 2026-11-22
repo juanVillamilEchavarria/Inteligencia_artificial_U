@@ -1,0 +1,82 @@
+{
+  "modelName": "Random Forest (GridSearchCV)",
+  "featureNames": [
+    "monto_log",
+    "mes",
+    "dia_semana",
+    "es_fin_semana"
+  ],
+  "targetName": "es_ingreso",
+  "bestParams": "modelo__max_depth=3, modelo__min_samples_leaf=1, modelo__n_estimators=200",
+  "trainCount": 90,
+  "testCount": 30,
+  "models": [
+    {
+      "modelName": "Regresión logística",
+      "accuracy": 0.7333333333333333,
+      "precision": 0.5,
+      "recall": 0.75,
+      "f1Macro": 0.7,
+      "f1Class1": 0.6,
+      "rocAuc": 0.8693181818181819,
+      "crossValidationMean": 0.6923908699995657,
+      "crossValidationStd": 0.04575638216878984,
+      "confusionMatrix": [
+        [
+          16,
+          6
+        ],
+        [
+          2,
+          6
+        ]
+      ],
+      "bestParams": ""
+    },
+    {
+      "modelName": "Random Forest (GridSearchCV)",
+      "accuracy": 0.8666666666666667,
+      "precision": 0.8333333333333334,
+      "recall": 0.625,
+      "f1Macro": 0.8136645962732919,
+      "f1Class1": 0.7142857142857143,
+      "rocAuc": 0.9318181818181819,
+      "crossValidationMean": 0.7683063488235903,
+      "crossValidationStd": 0.07102233487825056,
+      "confusionMatrix": [
+        [
+          21,
+          1
+        ],
+        [
+          3,
+          5
+        ]
+      ],
+      "bestParams": "modelo__max_depth=3, modelo__min_samples_leaf=1, modelo__n_estimators=200"
+    },
+    {
+      "modelName": "Red neuronal (MLP)",
+      "accuracy": 0.7666666666666667,
+      "precision": 0.5714285714285714,
+      "recall": 0.5,
+      "f1Macro": 0.6888888888888889,
+      "f1Class1": 0.5333333333333333,
+      "rocAuc": 0.7613636363636364,
+      "crossValidationMean": 0.7329930069930071,
+      "crossValidationStd": 0.08047913149318649,
+      "confusionMatrix": [
+        [
+          19,
+          3
+        ],
+        [
+          4,
+          4
+        ]
+      ],
+      "bestParams": ""
+    }
+  ],
+  "generatedAt": "2026-11-22T15:00:50"
+}

@@ -20,16 +20,32 @@ class EvaluateStep(TrainingStep):
 
     def execute(self, context: PerceptronTrainingContext) -> PerceptronTrainingContext:
         """Genera el reporte final a partir del modelo entrenado."""
-        if context.XScaled is None or context.y is None or context.training is None:
-            raise ValueError("EvaluateStep requiere XScaled, y y training (falta TrainPerceptronStep?)")
+        if (
+            context.XScaledTrain is None
+            or context.XScaledTest is None
+            or context.yTrain is None
+            or context.yTest is None
+            or context.training is None
+        ):
+            raise ValueError(
+                "EvaluateStep requiere train/test y training (falta TrainPerceptronStep?)"
+            )
 
         weights = np.array(context.training.weights)
         bias = context.training.bias
-        yProbability = PerceptronService.predictProbability(context.XScaled, weights, bias)
 
-        positiveCount = int(np.sum(context.y == 1))
-        negativeCount = int(np.sum(context.y == 0))
-        baselineAccuracy = max(positiveCount, negativeCount) / len(context.y)
+        trainProbability = PerceptronService.predictProbability(
+            context.XScaledTrain, weights, bias
+        )
+        testProbability = PerceptronService.predictProbability(
+            context.XScaledTest, weights, bias
+        )
+
+        positiveCount = int(np.sum(context.yTrain == 1))
+        negativeCount = int(np.sum(context.yTrain == 0))
+        positiveTest = int(np.sum(context.yTest == 1))
+        negativeTest = int(np.sum(context.yTest == 0))
+        testBaseline = max(positiveTest, negativeTest) / len(context.yTest)
 
         report = PerceptronReport(
             featureNames=context.featureNames,
@@ -37,13 +53,17 @@ class EvaluateStep(TrainingStep):
             weights=context.training.weights,
             bias=bias,
             initialLoss=context.training.losses[0],
-            finalLoss=PerceptronService.computeLoss(context.y, yProbability),
+            finalLoss=PerceptronService.computeLoss(context.yTrain, trainProbability),
             initialAccuracy=context.training.accuracies[0],
-            finalAccuracy=PerceptronService.computeAccuracy(context.y, yProbability),
-            baselineAccuracy=float(baselineAccuracy),
+            finalAccuracy=PerceptronService.computeAccuracy(context.yTrain, trainProbability),
+            baselineAccuracy=float(testBaseline),
             positiveCount=positiveCount,
             negativeCount=negativeCount,
             losses=context.training.losses,
             accuracies=context.training.accuracies,
+            testLoss=PerceptronService.computeLoss(context.yTest, testProbability),
+            testAccuracy=PerceptronService.computeAccuracy(context.yTest, testProbability),
+            trainCount=len(context.yTrain),
+            testCount=len(context.yTest),
         )
         return replace(context, report=report)

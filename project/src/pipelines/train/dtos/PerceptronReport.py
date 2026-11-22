@@ -37,3 +37,7 @@ class PerceptronReport:
     negativeCount: int
     losses: Tuple[float, ...]
     accuracies: Tuple[float, ...]
+    testLoss: float = 0.0
+    testAccuracy: float = 0.0
+    trainCount: int = 0
+    testCount: int = 0

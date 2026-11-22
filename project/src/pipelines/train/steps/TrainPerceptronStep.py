@@ -22,12 +22,14 @@ class TrainPerceptronStep(TrainingStep):
 
     def execute(self, context: PerceptronTrainingContext) -> PerceptronTrainingContext:
         """Entrena el modelo y agrega el resultado al contexto."""
-        if context.XScaled is None or context.y is None:
-            raise ValueError("TrainPerceptronStep requiere XScaled e y (falta StandardizeStep?)")
+        if context.XScaledTrain is None or context.yTrain is None:
+            raise ValueError(
+                "TrainPerceptronStep requiere XScaledTrain e yTrain (falta StandardizeStep?)"
+            )
 
         training = PerceptronService.train(
-            context.XScaled,
-            context.y,
+            context.XScaledTrain,
+            context.yTrain,
             learningRate=self._learningRate,
             epochs=self._epochs,
         )

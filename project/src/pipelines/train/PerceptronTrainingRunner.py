@@ -8,6 +8,7 @@ from pipelines.train.PerceptronTrainingPipeline import PerceptronTrainingPipelin
 from pipelines.train.steps.EvaluateStep import EvaluateStep
 from pipelines.train.steps.LoadPreparedDataStep import LoadPreparedDataStep
 from pipelines.train.steps.SelectFeaturesStep import SelectFeaturesStep
+from pipelines.train.steps.SplitDataStep import SplitDataStep
 from pipelines.train.steps.StandardizeStep import StandardizeStep
 from pipelines.train.steps.TrainPerceptronStep import TrainPerceptronStep
 
@@ -22,11 +23,14 @@ class PerceptronTrainingRunner:
         featureNames: Tuple[str, ...] = ("monto_log", "mes"),
         learningRate: float = 0.1,
         epochs: int = 500,
+        testSize: float = 0.25,
+        randomState: int = 42,
     ):
         """Define la ruta del dataset, las variables y los hiperparámetros."""
         self._pipeline = PerceptronTrainingPipeline(steps=[
             LoadPreparedDataStep(dataPath),
             SelectFeaturesStep(targetName, featureNames),
+            SplitDataStep(testSize, randomState),
             StandardizeStep(),
             TrainPerceptronStep(learningRate, epochs),
             EvaluateStep(),

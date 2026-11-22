@@ -22,7 +22,13 @@ class PerceptronTrainingContext:
     targetName: str = "es_ingreso"
     X: Optional[np.ndarray] = None
     y: Optional[np.ndarray] = None
+    XTrain: Optional[np.ndarray] = None
+    XTest: Optional[np.ndarray] = None
+    yTrain: Optional[np.ndarray] = None
+    yTest: Optional[np.ndarray] = None
     XScaled: Optional[np.ndarray] = None
+    XScaledTrain: Optional[np.ndarray] = None
+    XScaledTest: Optional[np.ndarray] = None
     means: Optional[np.ndarray] = None
     stds: Optional[np.ndarray] = None
     training: Optional[PerceptronTrainingDTO] = None

@@ -1,29 +1,25 @@
 """Punto de acceso a los movimientos financieros.
 
-Por ahora los datos se leen de un archivo JSON local. Esta clase está pensada
+Los datos crudos viven en ``data/datos_originales.json``. Esta clase está pensada
 para que, más adelante, la fuente sea una API sin cambiar el resto del sistema.
 """
 
 import json
-import os
+
 from app_collections.MovementsCollection import MovementsCollection
+from helpers.project_paths import RAW_DATASET_PATH
 
 
 class MovementsGateWay:
-    """
-    Clase para obtener los movimientos
-    por el momento abre un archivo .json manualmente, pero a futuro hara la peticion via API
-    """
+    """Obtiene los movimientos desde el archivo JSON canónico del proyecto."""
+
     @staticmethod
     def __open():
-        """Lee el archivo data.json y devuelve su contenido como lista de diccionarios."""
-        base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-        data_path = os.path.join(base_dir, 'data', 'data.json')
-        with open(data_path, 'r') as data:
+        """Lee el archivo de datos originales y devuelve la lista de diccionarios."""
+        with open(RAW_DATASET_PATH, "r", encoding="utf-8") as data:
             return json.load(data)
 
     @staticmethod
     def getData() -> MovementsCollection:
         """Carga los movimientos del archivo JSON y los entrega como colección."""
         return MovementsCollection.from_dict(MovementsGateWay.__open())
-        
