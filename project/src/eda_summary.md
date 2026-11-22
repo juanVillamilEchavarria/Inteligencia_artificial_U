@@ -47,4 +47,4 @@
 No se requirieron imputaciones (dataset sin nulos).
 
 ---
-*Resumen generado automáticamente el 22/11/2026 14:45:34 por Leo Counter AI - Módulo de Preparación de Datos.*
+*Resumen generado automáticamente el 22/11/2026 20:49:02 por Leo Counter AI - Módulo de Preparación de Datos.*

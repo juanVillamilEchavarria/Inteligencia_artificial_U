@@ -27,7 +27,7 @@ El repositorio cubre el ciclo completo exigido por el lineamiento:
 | Perceptrón desde cero con NumPy | ✅ con división train/test | `project/src/perceptron_proyecto.py` |
 | Comparación de modelos de Scikit-Learn | ✅ 3 modelos + GridSearchCV | `project/src/modelo_proyecto.py` |
 | Predicción de casos nuevos sin reentrenar | ✅ | `project/src/usar_modelo.py` |
-| Interfaz de valor agregado | ✅ menú en consola | `project/src/interfaz_consola.py` |
+| Interfaz de valor agregado | ✅ menú en consola con Rich (colores, tablas y barras de probabilidad) | `project/src/interfaz_consola.py` |
 | Gráficos de análisis y evaluación | ✅ 10 Seaborn + 2 perceptrón + 4 evaluación | `project/src/charts*` |
 
 ### Resultados principales (conjunto de prueba, 30 filas)
@@ -39,6 +39,10 @@ El repositorio cubre el ciclo completo exigido por el lineamiento:
 | Red neuronal (MLP) | 0.7667 | 0.5714 | 0.5000 | 0.6889 | 0.5333 | 0.7614 | 0.7330 |
 
 **Mejor modelo:** `Random Forest (GridSearchCV)` con `max_depth=3`, `min_samples_leaf=1` y `n_estimators=200`, seleccionado por **F1 macro de validación cruzada** (no por el conjunto de prueba). Se guarda en `project/src/modelo_final.joblib` y sus métricas en `project/src/modelo_metricas.json`.
+
+**Informe final (APA 7):** [`project/Informe_Final_Grupo05_LeoCounterAI.docx`](project/Informe_Final_Grupo05_LeoCounterAI.docx) (la versión PDF se entrega en AVACO).
+
+**Integrantes:** Juan Esteban Villamil Echavarría y Santiago Hidalgo López.
 
 ### Ejecución rápida con Docker
 
@@ -58,7 +62,7 @@ docker compose run --rm app python src/modelo_proyecto.py
 # 4) Predecir casos nuevos sin reentrenar
 docker compose run --rm app python src/usar_modelo.py
 
-# 5) Interfaz interactiva (menú en consola)
+# 5) Interfaz interactiva (menú en consola con Rich)
 docker compose run --rm -it app python src/interfaz_consola.py
 ```
 
@@ -79,7 +83,7 @@ project/
     ├── perceptron_proyecto.py           # Entry point: perceptrón desde cero (Avance 2)
     ├── modelo_proyecto.py               # Entry point: comparación de modelos + joblib
     ├── usar_modelo.py                   # Entry point: carga el modelo y predice
-    ├── interfaz_consola.py              # Valor agregado: menú interactivo en consola
+    ├── interfaz_consola.py              # Valor agregado: menú interactivo con Rich
     ├── modelo_final.joblib              # Mejor modelo serializado
     ├── modelo_metricas.json             # Métricas legibles del modelo
     │
@@ -217,33 +221,26 @@ El detalle de la fuente, la calidad y la estructura está en **`project/data/REA
 
 ## Objetivo
 
-El sistema de IA logrará los siguientes objetivos al integrarse como feature de **Leo Counter**:
+### Objetivo general
 
-### 1. Clasificación Semántica Automática
-Implementar un modelo **Naive Bayes Multinomial** que analice las descripciones en texto crudo de las transacciones para:
-- Detectar automáticamente sub-categorías específicas dentro de las categorías principales
-- Aprender patrones de lenguaje propios de cada usuario (ej: "tacos el pastor" → comida rápida, "despensa mensual" → supermercado)
-- Sugerir categorizaciones más precisas y granulares
+Construir y evaluar un prototipo reproducible de inteligencia artificial que clasifique los movimientos financieros de **Leo Counter** como **Ingreso** o **Gasto**, usando un perceptrón implementado desde cero con NumPy y modelos de Scikit-Learn integrados en un `Pipeline`.
 
-### 2. Detección Proactiva de Anomalías
-Aplicar un modelo estadístico de **Puntaje Z** para:
-- Identificar transacciones atípicas en tiempo real (montos que se desvían significativamente del comportamiento histórico)
-- Alertar al usuario sobre posibles fugas de dinero o consumos inusuales
-- Generar notificaciones automáticas vía el sistema de notificaciones existente de Leo Counter
+### Objetivos específicos (implementados)
 
-### 3. Reportes y Analíticas Enriquecidas
-Proporcionar insights avanzados y accionables:
-- **Desglose detallado por sub-categorías**: Mostrar no solo "Alimentación: $5,000" sino "Supermercado: $3,200 | Restaurantes: $1,200 | Cafeterías: $600"
-- **Detección de patrones de comportamiento**: "Gastas 40% más en cafeterías los lunes" o "Tus compras en Amazon aumentaron 200% este mes"
-- **Recomendaciones personalizadas**: Sugerencias de ahorro basadas en los patrones detectados
-- **Alertas inteligentes**: "Tu gasto en entretenimiento supera el presupuesto mensual en un 35%"
+1. **Preparar los datos**: limpiar y documentar 120 movimientos, crear variables derivadas (`monto_log`, `mes`, `dia_semana`, `es_fin_semana`, `es_ingreso`) y exportar un dataset listo para aprendizaje automático (`data/proyecto_limpio.csv`).
+2. **Entender el modelo por dentro**: implementar un perceptrón con sigmoide, pérdida logarítmica y descenso del gradiente usando solo NumPy, con división entrenamiento/prueba y estandarización calculada únicamente con entrenamiento.
+3. **Comparar modelos de Scikit-Learn**: regresión logística, Random Forest (optimizado con `GridSearchCV`) y red neuronal `MLPClassifier`, con validación cruzada estratificada y **F1 macro** como métrica principal, dado el desbalance de clases.
+4. **Usar el modelo sin reentrenar**: serializar el mejor modelo con `joblib` y usarlo desde `usar_modelo.py` y desde una interfaz de consola con **Rich**, todo reproducible con Docker.
 
-### 4. Mejora Continua del Sistema
-- Retroalimentar el sistema de categorización actual de Leo Counter con las sub-categorías detectadas por la IA
-- Crear un ciclo de aprendizaje donde el modelo mejore con cada transacción procesada
-- Integrarse seamlessly con la arquitectura DDD y CQRS existente de Leo Counter mediante nuevos Domain Services
+### Alcance y trabajo futuro
 
-**Resultado final**: Transformar a Leo Counter de un gestor de transacciones a un **asistente financiero inteligente** que no solo registra datos, sino que los comprende, analiza y ayuda activamente al usuario a mejorar su salud financiera.
+La versión entregada resuelve la **clasificación binaria Ingreso/Gasto** a partir del monto y del calendario. Las ideas iniciales del proyecto quedan como **trabajo futuro**:
+
+- **Clasificación semántica de sub-categorías** (por ejemplo, Naive Bayes multinomial o TF-IDF sobre la `descripcion`) para pasar de "Alimentación" a "supermercado", "restaurantes" o "cafeterías".
+- **Detección de anomalías** con Puntaje Z calculado por separado para ingresos y gastos (el EDA ya muestra que un umbral global generaría falsos positivos).
+- **Reportes enriquecidos y alertas** integrados a Leo Counter, con confirmación humana de cada predicción y registro de correcciones para reentrenar.
+
+**Resultado final**: un primer componente inteligente para Leo Counter que sugiere la clase de cada movimiento con una probabilidad interpretable, y una base de código por capas (pipelines, servicios y controladores) sobre la que se pueden agregar los modelos futuros.
 
 ## Análisis Exploratorio de Datos (EDA)
 
@@ -522,7 +519,7 @@ Sobre el mismo dataset (120 registros, features `monto_log`, `mes`, `dia_semana`
 ### 6. Interfaz de consola y uso del modelo
 
 - **`usar_modelo.py`**: carga `modelo_final.joblib` (con el scaler y las features serializadas) y predice sobre transacciones nuevas.
-- **`interfaz_consola.py`**: menú interactivo en consola (sin dependencias nuevas) para entrenar modelos, ver métricas y predecir transacciones personalizadas.
+- **`interfaz_consola.py`**: interfaz de consola construida con **Rich**: predice movimientos personalizados (acepta montos como `250.000`), muestra la probabilidad con una barra de color y un nivel de confianza, prueba un lote de ejemplo, compara los modelos (resaltando el mejor valor de cada métrica y la matriz de confusión) y explica el modelo por dentro (hiperparámetros e importancia de cada variable).
 
 ### 7. Cómo ejecutar con Docker
 
